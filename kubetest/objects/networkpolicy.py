@@ -90,7 +90,7 @@ class NetworkPolicy(ApiObject):
             namespace=self.namespace,
         )
 
-    def is_ready(self) -> None:
+    def is_ready(self) -> bool:
         """Check if the NetworkPolicy is in the ready state.
 
         Returns:
