@@ -128,24 +128,28 @@ def simple_ingress():
         kind="Ingress",
         metadata=client.V1ObjectMeta(name="my-ingress"),
         spec=client.V1IngressSpec(
-            rules=[client.V1IngressRule(
-                host='my-host.com',
-                http=client.V1HTTPIngressRuleValue(
-                    paths=[client.V1HTTPIngressPath(
-                        backend=client.V1IngressBackend(
-                            service=client.V1IngressServiceBackend(
-                                port=client.V1ServiceBackendPort(
-                                    number=80,
+            rules=[
+                client.V1IngressRule(
+                    host="my-host.com",
+                    http=client.V1HTTPIngressRuleValue(
+                        paths=[
+                            client.V1HTTPIngressPath(
+                                backend=client.V1IngressBackend(
+                                    service=client.V1IngressServiceBackend(
+                                        port=client.V1ServiceBackendPort(
+                                            number=80,
+                                        ),
+                                        name="my-service",
+                                    )
                                 ),
-                                name="my-service")
-                        ),
-                        path="/",
-                        path_type="Exact"
-                    )]
+                                path="/",
+                                path_type="Exact",
+                            )
+                        ]
+                    ),
                 )
-            )
             ]
-        )
+        ),
     )
 
 

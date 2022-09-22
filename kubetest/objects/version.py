@@ -21,8 +21,8 @@ class Version(ApiObject):
     obj_type = client.VersionInfo
 
     api_clients = {
-        'preferred': client.VersionApi,
-        'v1': client.VersionApi,
+        "preferred": client.VersionApi,
+        "v1": client.VersionApi,
     }
 
     def __init__(self):

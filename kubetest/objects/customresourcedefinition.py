@@ -5,24 +5,24 @@ from kubernetes import client
 
 from .api_object import ApiObject
 
-log = logging.getLogger('kubetest')
+log = logging.getLogger("kubetest")
 
 
 class CustomResourceDefinition(ApiObject):
     """Kubetest wrapper around a Kubernetes `CustomResourceDefinition`_ API Object.
-     The actual ``kubernetes.client.V1beta1CustomResourceDefinition`` instance that this
-     wraps can be accessed via the ``obj`` instance member.
-     This wrapper provides some convenient functionality around the
-     API Object and provides some state management for the `V1beta1CustomResourceDefinition`_.
-     .. V1beta1CustomResourceDefinition:
-         https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#customresourcedefinition-v1beta1-apiextensions-k8s-io
-     """
+    The actual ``kubernetes.client.V1beta1CustomResourceDefinition`` instance that this
+    wraps can be accessed via the ``obj`` instance member.
+    This wrapper provides some convenient functionality around the
+    API Object and provides some state management for the `V1beta1CustomResourceDefinition`_.
+    .. V1beta1CustomResourceDefinition:
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#customresourcedefinition-v1beta1-apiextensions-k8s-io
+    """
 
     obj_type = client.V1CustomResourceDefinitionList
 
     api_clients = {
-        'preferred': client.ApiextensionsV1Api,
-        'v1': client.ApiextensionsV1Api,
+        "preferred": client.ApiextensionsV1Api,
+        "v1": client.ApiextensionsV1Api,
     }
 
     @property
@@ -35,8 +35,9 @@ class CustomResourceDefinition(ApiObject):
             namespace: This argument is ignored for customresourcedefinitions.
         """
         log.info(
-            f'creating customresourcedefinition "{self.name}" in namespace "{self.namespace}"')
-        log.debug(f'customresourcedefinition: {self.obj}')
+            f'creating customresourcedefinition "{self.name}" in namespace "{self.namespace}"'
+        )
+        log.debug(f"customresourcedefinition: {self.obj}")
 
         self.obj = self.api_client.create_custom_resource_definition(
             body=self.obj,
@@ -56,8 +57,8 @@ class CustomResourceDefinition(ApiObject):
             options = client.V1DeleteOptions()
 
         log.info(f'deleting customresourcedefinition "{self.name}"')
-        log.debug(f'delete options: {options}')
-        log.debug(f'customresourcedefinition: {self.obj}')
+        log.debug(f"delete options: {options}")
+        log.debug(f"customresourcedefinition: {self.obj}")
 
         return self.api_client.delete_custom_resource_definition(
             name=self.name,
@@ -66,9 +67,7 @@ class CustomResourceDefinition(ApiObject):
 
     def refresh(self) -> None:
         """Refresh the underlying Kubernetes customresourcedefinition resource."""
-        self.obj = self.api_client.read_custom_resource_definition(
-            name=self.name
-        )
+        self.obj = self.api_client.read_custom_resource_definition(name=self.name)
 
     def is_ready(self) -> bool:
         """Check if the customresourcedefinition is in the ready state.
