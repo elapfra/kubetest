@@ -35,9 +35,7 @@ class ClusterRole(ApiObject):
         Args:
             namespace: This argument is ignored for ClusterRole.
         """
-        log.info(
-            f'creating clusterrole "{self.name}" in namespace "{self.namespace}"'
-        )
+        log.info(f'creating clusterrole "{self.name}" in namespace "{self.namespace}"')
         log.debug(f"clusterrole: {self.obj}")
 
         self.obj = self.api_client.create_cluster_role(

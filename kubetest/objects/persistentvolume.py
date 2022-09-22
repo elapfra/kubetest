@@ -1,7 +1,7 @@
 """Kubetest wrapper for the Kubernetes ``PersistentVolume`` API Object."""
 
 import logging
-from typing import Optional, Any
+from typing import Any, Optional
 
 from kubernetes import client
 from kubernetes.client import ApiException
@@ -23,6 +23,7 @@ class PersistentVolume(ApiObject):
     .. _PersistentVolume:
         https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#persistentvolume-v1-core
     """
+
     obj_type = client.V1PersistentVolume
 
     api_clients = {

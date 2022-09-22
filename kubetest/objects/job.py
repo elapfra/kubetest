@@ -6,10 +6,9 @@ from typing import List
 
 from kubernetes import client
 
-from kubetest.utils import selector_string
-
 from kubetest.objects.api_object import ApiObject
 from kubetest.objects.pod import Pod
+from kubetest.utils import selector_string
 
 log = logging.getLogger("kubetest")
 
@@ -164,7 +163,7 @@ class Job(ApiObject):
 
         # check the status for the start_time
         # it start_time is set then job is 'ready'
-        if hasattr(status, 'start_time'):
+        if hasattr(status, "start_time"):
             return status.start_time is not None
         else:
             return False
@@ -175,7 +174,7 @@ class Job(ApiObject):
         :return:
         """
         status = self.status()
-        if hasattr(status, 'completion_time'):
+        if hasattr(status, "completion_time"):
             return status.completion_time is not None
         else:
             return False
@@ -196,15 +195,15 @@ class Job(ApiObject):
     def get_pod_status_counts(self) -> tuple:
         status = self.status()
         active = 0
-        if hasattr(status, 'active') and status.active is not None:
+        if hasattr(status, "active") and status.active is not None:
             active = status.active
 
         succeeded = 0
-        if hasattr(status, 'succeeded') and status.succeeded is not None:
+        if hasattr(status, "succeeded") and status.succeeded is not None:
             succeeded = status.succeeded
 
         failed = 0
-        if hasattr(status, 'failed') and status.failed is not None:
+        if hasattr(status, "failed") and status.failed is not None:
             failed = status.failed
 
         return active, succeeded, failed

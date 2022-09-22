@@ -260,7 +260,7 @@ class TestGetType:
                     "kind": "ClusterRoleBinding",
                 },
                 client.V1ClusterRoleBinding,
-            )
+            ),
         ],
     )
     def test_ok(self, data, expected):

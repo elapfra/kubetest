@@ -6,13 +6,13 @@ fixture provides the ``TestClient`` instance to the test case.
 """
 
 import logging
-from typing import Dict, Optional, Union, Any
+from typing import Any, Dict, Optional, Union
 
 from kubernetes import client
 
 from kubetest import objects, utils
 from kubetest.condition import Condition, Policy, check_and_sort
-from kubetest.objects import CustomResourceDefinition, CustomObject
+from kubetest.objects import CustomObject, CustomResourceDefinition
 
 log = logging.getLogger("kubetest")
 
@@ -215,7 +215,7 @@ class TestClient:
         if set_namespace:
             deployment.namespace = self.namespace
         return deployment
-    
+
     def load_job(
         self,
         path: str,
@@ -246,7 +246,6 @@ class TestClient:
         if set_namespace:
             jobs.namespace = self.namespace
         return jobs
-
 
     def load_pod(
         self,
@@ -608,10 +607,8 @@ class TestClient:
         """
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = (
-            objects.ClusterRole.preferred_client().list_cluster_role(
-                **selectors,
-            )
+        results = objects.ClusterRole.preferred_client().list_cluster_role(
+            **selectors,
         )
 
         clusterroles = {}
@@ -662,14 +659,14 @@ class TestClient:
 
     @staticmethod
     def get_custom_objects(
-            crd: CustomResourceDefinition = None,
-            group: str = None,
-            version: str = None,
-            plural: str = None,
-            namespace: str = None,
-            fields: Dict[str, str] = None,
-            labels: Dict[str, str] = None,
-            classs=CustomObject
+        crd: CustomResourceDefinition = None,
+        group: str = None,
+        version: str = None,
+        plural: str = None,
+        namespace: str = None,
+        fields: Dict[str, str] = None,
+        labels: Dict[str, str] = None,
+        classs=CustomObject,
     ) -> Dict[str, Any]:
         selectors = utils.selector_kwargs(fields, labels)
 
@@ -679,32 +676,34 @@ class TestClient:
                 crd.obj.spec.versions[-1].name if crd else version,
                 namespace,
                 crd.obj.spec.names.plural if crd else plural,
-                **selectors
+                **selectors,
             )
         else:
             results = CustomObject.preferred_client().list_cluster_custom_object(
                 crd.obj.spec.group if crd else group,
                 crd.obj.spec.versions[-1].name if crd else version,
                 crd.obj.spec.names.plural if crd else plural,
-                **selectors
+                **selectors,
             )
         _custom_objects = {}
-        for obj in results['items']:
-            custom_object = classs(obj, crd=crd, group=group, version=version, plural=plural)
+        for obj in results["items"]:
+            custom_object = classs(
+                obj, crd=crd, group=group, version=version, plural=plural
+            )
             _custom_objects[custom_object.name] = custom_object
         return _custom_objects
 
     @staticmethod
     def get_custom_object(
-            name: str,
-            crd: CustomResourceDefinition = None,
-            group: str = None,
-            version: str = None,
-            plural: str = None,
-            namespace: str = None,
-            fields: Dict[str, str] = None,
-            labels: Dict[str, str] = None,
-            classs=CustomObject
+        name: str,
+        crd: CustomResourceDefinition = None,
+        group: str = None,
+        version: str = None,
+        plural: str = None,
+        namespace: str = None,
+        fields: Dict[str, str] = None,
+        labels: Dict[str, str] = None,
+        classs=CustomObject,
     ) -> Dict[str, Any]:
         selectors = utils.selector_kwargs(fields, labels)
 
@@ -715,7 +714,7 @@ class TestClient:
                 namespace,
                 crd.obj.spec.names.plural if crd else plural,
                 name,
-                **selectors
+                **selectors,
             )
         else:
             obj = CustomObject.preferred_client().get_cluster_custom_object(
@@ -723,20 +722,24 @@ class TestClient:
                 crd.obj.spec.versions[-1].name if crd else version,
                 crd.obj.spec.names.plural if crd else plural,
                 name,
-                **selectors
+                **selectors,
             )
         return classs(obj, crd=crd, group=group, version=version, plural=plural)
 
     @staticmethod
     def get_custom_resource_definitions(
-            fields: Dict[str, str] = None,
-            labels: Dict[str, str] = None,
-            by_kind: bool = True
+        fields: Dict[str, str] = None,
+        labels: Dict[str, str] = None,
+        by_kind: bool = True,
     ) -> Dict[str, CustomResourceDefinition]:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = CustomResourceDefinition.preferred_client().list_custom_resource_definition(**selectors)
+        results = (
+            CustomResourceDefinition.preferred_client().list_custom_resource_definition(
+                **selectors
+            )
+        )
 
         crds = {}
         for obj in results.items:
@@ -748,10 +751,12 @@ class TestClient:
         return crds
 
     @staticmethod
-    def get_custom_resource_definition(
-            name: str
-    ) -> CustomResourceDefinition:
-        obj = CustomResourceDefinition.preferred_client().read_custom_resource_definition(name)
+    def get_custom_resource_definition(name: str) -> CustomResourceDefinition:
+        obj = (
+            CustomResourceDefinition.preferred_client().read_custom_resource_definition(
+                name
+            )
+        )
         return CustomResourceDefinition(obj)
 
     def get_daemonsets(
@@ -1387,10 +1392,8 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = (
-            objects.StorageClass.preferred_client().list_storage_class(
-                **selectors,
-            )
+        results = objects.StorageClass.preferred_client().list_storage_class(
+            **selectors,
         )
 
         storageclasses = {}
@@ -1401,15 +1404,13 @@ class TestClient:
         return storageclasses
 
     @staticmethod
-    def get_k8s_version_code(
-    ) -> objects.Version:
+    def get_k8s_version_code() -> objects.Version:
         """Get Version from the cluster.
 
         Returns:
             Cluster Version obj
         """
         return objects.Version()
-
 
     # ****** Test Helpers ******
 

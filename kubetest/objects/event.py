@@ -28,7 +28,7 @@ class Event:
         "preferred": client.CoreV1Api,
         "v1": client.CoreV1Api,
         "events.k8s.io": client.CoreV1Event,
-        "events.k8s.io/v1beta1" : client.EventsV1beta1Api
+        "events.k8s.io/v1beta1": client.EventsV1beta1Api,
     }
 
     def __init__(self, api_object) -> None:

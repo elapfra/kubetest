@@ -1,9 +1,10 @@
 """Kubetest wrapper for the Kubernetes ``storageClass`` API Object."""
 
-from distutils.util import strtobool
 import logging
+from distutils.util import strtobool
 
 from kubernetes import client
+
 from kubetest.objects import ApiObject
 
 LOG = logging.getLogger(__name__)
@@ -25,19 +26,23 @@ class StorageClass(ApiObject):
     obj_type = client.V1StorageClass
 
     api_clients = {
-        'preferred': client.StorageV1Api,
-        'v1': client.StorageV1Api,
-        'storage.k8s.io/v1beta1': client.StorageV1beta1Api
+        "preferred": client.StorageV1Api,
+        "v1": client.StorageV1Api,
+        "storage.k8s.io/v1beta1": client.StorageV1beta1Api,
     }
 
     def refresh(self) -> None:
         """Refresh the underlying Kubernetes StorageClass resource."""
-        storage_classes = client.StorageV1Api(api_client=self.api_client).list_storage_class()
+        storage_classes = client.StorageV1Api(
+            api_client=self.api_client
+        ).list_storage_class()
         for storage_class in storage_classes.items:
             if storage_class.metadata.name == self.name:
                 self.obj = storage_class
                 return
-        LOG.warning(f'unable to refresh storage class: no storage_class found with name: {self.name}')
+        LOG.warning(
+            f"unable to refresh storage class: no storage_class found with name: {self.name}"
+        )
 
     def create(self, namespace: str = None) -> None:
         pass
@@ -50,5 +55,7 @@ class StorageClass(ApiObject):
 
     def is_default(self) -> bool:
         # "metadata" "annotations" "storageclass.kubernetes.io/is-default-class": "true"
-        flag = self.obj.metadata.annotations.get("storageclass.kubernetes.io/is-default-class", "0")
+        flag = self.obj.metadata.annotations.get(
+            "storageclass.kubernetes.io/is-default-class", "0"
+        )
         return bool(strtobool(flag.lower()))

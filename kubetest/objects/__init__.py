@@ -3,8 +3,8 @@
 # flake8: noqa
 
 from .api_object import ApiObject
-from .clusterrolebinding import ClusterRoleBinding
 from .clusterrole import ClusterRole
+from .clusterrolebinding import ClusterRoleBinding
 from .configmap import ConfigMap
 from .container import Container
 from .custom_objects import CustomObject
@@ -25,6 +25,6 @@ from .rolebinding import RoleBinding
 from .secret import Secret
 from .service import Service
 from .serviceaccount import ServiceAccount
-from .storageclass import StorageClass
 from .statefulset import StatefulSet
+from .storageclass import StorageClass
 from .version import Version
