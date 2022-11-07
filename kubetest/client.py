@@ -704,7 +704,7 @@ class TestClient:
         fields: Dict[str, str] = None,
         labels: Dict[str, str] = None,
         classs=CustomObject,
-    ) -> Dict[str, Any]:
+    ) -> CustomObject:
         selectors = utils.selector_kwargs(fields, labels)
 
         if namespace:
@@ -1286,7 +1286,7 @@ class TestClient:
         replicasets = {}
         for obj in results.items:
             rs = objects.ReplicaSet(obj)
-            replicasets[replicasets.name] = rs
+            replicasets[rs.name] = rs
 
         return replicasets
 

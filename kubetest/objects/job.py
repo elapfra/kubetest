@@ -23,7 +23,7 @@ class Job(ApiObject):
     API Object and provides some state management for the `V1Job`_.
 
     .. _Job:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#job-v1-batch
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#job-v1-batch
     """
 
     obj_type = client.V1Job

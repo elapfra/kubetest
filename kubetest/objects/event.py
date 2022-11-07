@@ -19,7 +19,7 @@ class Event:
     Event object to make Event-based interactions easier
 
     .. _Event:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#event-v1-core
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#event-v1-core
     """
 
     obj_type = client.CoreV1Event
@@ -28,7 +28,6 @@ class Event:
         "preferred": client.CoreV1Api,
         "v1": client.CoreV1Api,
         "events.k8s.io": client.CoreV1Event,
-        "events.k8s.io/v1beta1": client.EventsV1beta1Api,
     }
 
     def __init__(self, api_object) -> None:
