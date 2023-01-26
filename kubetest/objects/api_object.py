@@ -51,7 +51,7 @@ class ApiObject(abc.ABC):
     is not specified for the resource.
     """
 
-    def __init__(self, api_object, kubeconfig=None, kubecontext=None) -> None:
+    def __init__(self, api_object, api_client: kubernetes.client.ApiClient = None) -> None:
         # The underlying Kubernetes Api Object
         self.obj = api_object
 
@@ -59,8 +59,7 @@ class ApiObject(abc.ABC):
         # by the apiVersion of the object's manifest.
         self._api_client = None
 
-        self._kubeconfig = kubeconfig
-        self._kubecontext = kubecontext
+        self.raw_api_client = api_client or kubernetes.client.ApiClient()
 
     def __str__(self) -> str:
         return str(self.obj)
@@ -125,19 +124,12 @@ class ApiObject(abc.ABC):
                         f"defined for resource ({self.version})"
                     )
             # If we did find it, initialize that client version.
-            if self._kubeconfig:
-                self._api_client = c(
-                api_client=kubernetes.config.new_client_from_config(
-                    config_file=os.path.expandvars(os.path.expanduser(self._kubeconfig)),
-                    context=self._kubecontext
-            ))
-            else:
-                self._api_client = c()
+            self._api_client = c(api_client=self.raw_api_client)
 
         return self._api_client
 
     @classmethod
-    def preferred_client(cls):
+    def preferred_client(cls, api_client: kubernetes.client.ApiClient = None):
         """The preferred  API client for the Kubernetes object. This is defined in the
         ``api_clients`` class member dict for each object.
 
@@ -149,7 +141,8 @@ class ApiObject(abc.ABC):
             raise ValueError(
                 f"no preferred api client defined for object {cls.__name__}",
             )
-        return c()
+        raw_api_client = api_client or kubernetes.client.ApiClient()
+        return c(api_client=raw_api_client)
 
     def wait_until_ready(
         self,

@@ -3,7 +3,7 @@
 import logging
 import os
 
-from typing import Generator, List, Union
+from typing import Generator, List, Union, Optional
 
 import kubernetes
 
@@ -154,24 +154,13 @@ class TestMeta:
         node_id: str,
         namespace_create: bool = True,
         namespace_name: str = None,
-        kubeconfig=None,      # Todo: Typing
-        kubecontext=None      # Todo: Typing
+        api_client: kubernetes.client.ApiClient = None
     ) -> None:
 
         self.name = name
         self.node_id = node_id
 
-        if kubeconfig:
-            self._kube_client = kubernetes.client.CoreV1Api(
-                api_client=kubernetes.config.new_client_from_config(
-                    config_file=os.path.expandvars(os.path.expanduser(kubeconfig)),
-                    context=kubecontext
-                ))
-        else:
-            self._kube_client = None
-
-        self._kubeconfig = kubeconfig
-        self._kubecontext = kubecontext
+        self.api_client = api_client or kubernetes.client.ApiClient()
 
         if namespace_name is None:
             self.ns = utils.new_namespace(name)
@@ -198,21 +187,15 @@ class TestMeta:
     def client(self) -> client.TestClient:
         """Get the TestClient for the test case."""
         if self._client is None:
-            self._client = client.TestClient(self.ns, self.kube_client)
+            self._client = client.TestClient(self.ns, self.api_client)
         return self._client
-
-    @property
-    def kube_client(self) -> kubernetes.client.CoreV1Api:
-        return self._kube_client or kubernetes.client.CoreV1Api()
 
 
     @property
     def namespace(self) -> objects.Namespace:
         """Get the Namespace API Object associated with the test case."""
         if self._namespace is None:
-            self._namespace = objects.Namespace.new(self.ns,
-                                                    kubeconfig=self._kubeconfig,
-                                                    kubecontext=self._kubecontext)
+            self._namespace = objects.Namespace.new(self.ns, api_client=self.api_client)
         return self._namespace
 
     def setup(self) -> None:
@@ -292,7 +275,7 @@ class TestMeta:
             # prior to tearing down the namespace and cleaning up all of the
             # objects in the namespace, get the logs for the containers in the
             # namespace.
-            pods_list = self.kube_client.list_namespaced_pod(
+            pods_list = kubernetes.client.CoreV1Api(api_client=self.api_client).list_namespaced_pod(
                 namespace=self.ns
             )
         except Exception as e:
@@ -311,7 +294,7 @@ class TestMeta:
                 pod_ns = pod.metadata.namespace
                 container_name = container.name
                 try:
-                    logs = self.kube_client.read_namespaced_pod_log(
+                    logs = kubernetes.client.CoreV1Api(api_client=self.api_client).read_namespaced_pod_log(
                         name=pod_name,
                         namespace=pod_ns,
                         container=container_name,
@@ -412,13 +395,21 @@ class KubetestManager:
             The newly created TestMeta for the test case.
         """
         log.info(f"creating test meta for {node_id}")
+
+        if kubeconfig:
+            api_client = kubernetes.config.new_client_from_config(
+                            config_file=os.path.expandvars(os.path.expanduser(kubeconfig)),
+                            context=kubecontext
+                )
+        else:
+            api_client = kubernetes.client.ApiClient()
+
         meta = TestMeta(
             node_id=node_id,
             name=test_name,
             namespace_create=namespace_create,
             namespace_name=namespace_name,
-            kubeconfig=kubeconfig,
-            kubecontext=kubecontext
+            api_client=api_client
         )
 
         self.nodes[node_id] = meta

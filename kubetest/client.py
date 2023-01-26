@@ -8,6 +8,7 @@ fixture provides the ``TestClient`` instance to the test case.
 import logging
 from typing import Any, Dict, Optional, Union
 
+import kubernetes.client
 from kubernetes import client
 
 from kubetest import objects, utils
@@ -28,10 +29,10 @@ class TestClient:
             case will have its own namespace assigned.
     """
 
-    def __init__(self, namespace: str, kube_client: client.CoreV1Api) -> None:
+    def __init__(self, namespace: str, api_client: client.ApiClient = None) -> None:
         self.namespace = namespace
         self.pre_registered = []
-        self.kube_client = kube_client
+        self.api_client = api_client or kubernetes.client.ApiClient()
 
     # ****** Generic Helpers on ApiObjects ******
 
@@ -587,8 +588,8 @@ class TestClient:
 
     # ****** General Helpers ******
 
-    @staticmethod
     def get_clusterroles(
+        self,
         fields: Dict[str, str] = None,
         labels: Dict[str, str] = None,
     ) -> Dict[str, objects.ClusterRole]:
@@ -608,7 +609,7 @@ class TestClient:
         """
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = objects.ClusterRole.preferred_client().list_cluster_role(
+        results = objects.ClusterRole.preferred_client(api_client=self.api_client).list_cluster_role(
             **selectors,
         )
 
@@ -646,7 +647,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = objects.ConfigMap.preferred_client().list_namespaced_config_map(
+        results = objects.ConfigMap.preferred_client(api_client=self.api_client).list_namespaced_config_map(
             namespace=namespace,
             **selectors,
         )
@@ -658,8 +659,8 @@ class TestClient:
 
         return configmaps
 
-    @staticmethod
     def get_custom_objects(
+        self,
         crd: CustomResourceDefinition = None,
         group: str = None,
         version: str = None,
@@ -672,7 +673,7 @@ class TestClient:
         selectors = utils.selector_kwargs(fields, labels)
 
         if namespace:
-            results = CustomObject.preferred_client().list_namespaced_custom_object(
+            results = CustomObject.preferred_client(api_client=self.api_client).list_namespaced_custom_object(
                 crd.obj.spec.group if crd else group,
                 crd.obj.spec.versions[-1].name if crd else version,
                 namespace,
@@ -680,7 +681,7 @@ class TestClient:
                 **selectors,
             )
         else:
-            results = CustomObject.preferred_client().list_cluster_custom_object(
+            results = CustomObject.preferred_client(api_client=self.api_client).list_cluster_custom_object(
                 crd.obj.spec.group if crd else group,
                 crd.obj.spec.versions[-1].name if crd else version,
                 crd.obj.spec.names.plural if crd else plural,
@@ -694,8 +695,8 @@ class TestClient:
             _custom_objects[custom_object.name] = custom_object
         return _custom_objects
 
-    @staticmethod
     def get_custom_object(
+        self,
         name: str,
         crd: CustomResourceDefinition = None,
         group: str = None,
@@ -709,7 +710,7 @@ class TestClient:
         selectors = utils.selector_kwargs(fields, labels)
 
         if namespace:
-            obj = CustomObject.preferred_client().get_namespaced_custom_object(
+            obj = CustomObject.preferred_client(api_client=self.api_client).get_namespaced_custom_object(
                 crd.obj.spec.group if crd else group,
                 crd.obj.spec.versions[-1].name if crd else version,
                 namespace,
@@ -718,7 +719,7 @@ class TestClient:
                 **selectors,
             )
         else:
-            obj = CustomObject.preferred_client().get_cluster_custom_object(
+            obj = CustomObject.preferred_client(api_client=self.api_client).get_cluster_custom_object(
                 crd.obj.spec.group if crd else group,
                 crd.obj.spec.versions[-1].name if crd else version,
                 crd.obj.spec.names.plural if crd else plural,
@@ -727,8 +728,8 @@ class TestClient:
             )
         return classs(obj, crd=crd, group=group, version=version, plural=plural)
 
-    @staticmethod
     def get_custom_resource_definitions(
+        self,
         fields: Dict[str, str] = None,
         labels: Dict[str, str] = None,
         by_kind: bool = True,
@@ -737,7 +738,7 @@ class TestClient:
         selectors = utils.selector_kwargs(fields, labels)
 
         results = (
-            CustomResourceDefinition.preferred_client().list_custom_resource_definition(
+            CustomResourceDefinition.preferred_client(api_client=self.api_client).list_custom_resource_definition(
                 **selectors
             )
         )
@@ -751,10 +752,9 @@ class TestClient:
                 crds[crd.name] = crd
         return crds
 
-    @staticmethod
-    def get_custom_resource_definition(name: str) -> CustomResourceDefinition:
+    def get_custom_resource_definition(self, name: str) -> CustomResourceDefinition:
         obj = (
-            CustomResourceDefinition.preferred_client().read_custom_resource_definition(
+            CustomResourceDefinition.preferred_client(api_client=self.api_client).read_custom_resource_definition(
                 name
             )
         )
@@ -787,7 +787,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = objects.DaemonSet.preferred_client().list_namespaced_daemon_set(
+        results = objects.DaemonSet.preferred_client(api_client=self.api_client).list_namespaced_daemon_set(
             namespace=namespace,
             **selectors,
         )
@@ -826,7 +826,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = objects.Deployment.preferred_client().list_namespaced_deployment(
+        results = objects.Deployment.preferred_client(api_client=self.api_client).list_namespaced_deployment(
             namespace=namespace,
             **selectors,
         )
@@ -865,7 +865,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = objects.Endpoints.preferred_client().list_namespaced_endpoints(
+        results = objects.Endpoints.preferred_client(api_client=self.api_client).list_namespaced_endpoints(
             namespace=namespace,
             **selectors,
         )
@@ -901,9 +901,9 @@ class TestClient:
         selectors = utils.selector_kwargs(fields, labels)
 
         if all_namespaces:
-            results = self.kube_client.list_event_for_all_namespaces(**selectors)
+            results = client.CoreV1Api(api_client=self.api_client).list_event_for_all_namespaces(**selectors)
         else:
-            results = self.kube_client.list_namespaced_event(
+            results = client.CoreV1Api(api_client=self.api_client).list_namespaced_event(
                 namespace=self.namespace, **selectors
             )
 
@@ -944,9 +944,9 @@ class TestClient:
         selectors = utils.selector_kwargs(fields, labels)
 
         if all_namespaces:
-            results = client.BatchV1Api().list_job_for_all_namespaces(**selectors)
+            results = client.BatchV1Api(api_client=self.api_client).list_job_for_all_namespaces(**selectors)
         else:
-            results = client.BatchV1Api().list_namespaced_job(
+            results = client.BatchV1Api(api_client=self.api_client).list_namespaced_job(
                 namespace=namespace, **selectors
             )
 
@@ -978,7 +978,7 @@ class TestClient:
         """
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = objects.Namespace.preferred_client().list_namespace(
+        results = objects.Namespace.preferred_client(api_client=self.api_client).list_namespace(
             **selectors,
         )
 
@@ -1010,7 +1010,7 @@ class TestClient:
         """
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = self.kube_client.list_node(
+        results = client.CoreV1Api(api_client=self.api_client).list_node(
             **selectors,
         )
 
@@ -1048,7 +1048,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = objects.Pod.preferred_client().list_namespaced_pod(
+        results = objects.Pod.preferred_client(api_client=self.api_client).list_namespaced_pod(
             namespace=namespace,
             **selectors,
         )
@@ -1087,7 +1087,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = objects.Secret.preferred_client().list_namespaced_secret(
+        results = objects.Secret.preferred_client(api_client=self.api_client).list_namespaced_secret(
             namespace=namespace,
             **selectors,
         )
@@ -1126,7 +1126,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = objects.Service.preferred_client().list_namespaced_service(
+        results = objects.Service.preferred_client(api_client=self.api_client).list_namespaced_service(
             namespace=namespace,
             **selectors,
         )
@@ -1138,8 +1138,8 @@ class TestClient:
 
         return services
 
-    @staticmethod
     def get_persistentvolumes(
+        self,
         fields: Dict[str, str] = None,
         labels: Dict[str, str] = None,
     ) -> Dict[str, objects.PersistentVolume]:
@@ -1159,7 +1159,7 @@ class TestClient:
         """
         selectors = utils.selector_kwargs(fields, labels)
 
-        c = objects.PersistentVolume.preferred_client()
+        c = objects.PersistentVolume.preferred_client(api_client=self.api_client)
         results = c.list_persistent_volume(
             **selectors,
         )
@@ -1199,7 +1199,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        c = objects.PersistentVolumeClaim.preferred_client()
+        c = objects.PersistentVolumeClaim.preferred_client(api_client=self.api_client)
         results = c.list_namespaced_persistent_volume_claim(
             namespace=namespace,
             **selectors,
@@ -1240,7 +1240,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = objects.Ingress.preferred_client().list_namespaced_ingress(
+        results = objects.Ingress.preferred_client(api_client=self.api_client).list_namespaced_ingress(
             namespace=namespace,
             **selectors,
         )
@@ -1279,7 +1279,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = objects.ReplicaSet.preferred_client().list_namespaced_replica_set(
+        results = objects.ReplicaSet.preferred_client(api_client=self.api_client).list_namespaced_replica_set(
             namespace=namespace,
             **selectors,
         )
@@ -1318,7 +1318,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = objects.StatefulSet.preferred_client().list_namespaced_stateful_set(
+        results = objects.StatefulSet.preferred_client(api_client=self.api_client).list_namespaced_stateful_set(
             namespace=namespace,
             **selectors,
         )
@@ -1358,7 +1358,7 @@ class TestClient:
         selectors = utils.selector_kwargs(fields, labels)
 
         results = (
-            objects.ServiceAccount.preferred_client().list_namespaced_service_account(
+            objects.ServiceAccount.preferred_client(api_client=self.api_client).list_namespaced_service_account(
                 namespace=namespace,
                 **selectors,
             )
@@ -1393,7 +1393,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = objects.StorageClass.preferred_client().list_storage_class(
+        results = objects.StorageClass.preferred_client(api_client=self.api_client).list_storage_class(
             **selectors,
         )
 
