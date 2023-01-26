@@ -2,8 +2,10 @@
 
 import abc
 import logging
+import os
 from typing import Optional, Union
 
+import kubernetes
 from kubernetes import client
 from kubernetes.client.rest import ApiException
 
@@ -49,13 +51,16 @@ class ApiObject(abc.ABC):
     is not specified for the resource.
     """
 
-    def __init__(self, api_object) -> None:
+    def __init__(self, api_object, kubeconfig=None, kubecontext=None) -> None:
         # The underlying Kubernetes Api Object
         self.obj = api_object
 
         # The api client for the object. This will be determined
         # by the apiVersion of the object's manifest.
         self._api_client = None
+
+        self._kubeconfig = kubeconfig
+        self._kubecontext = kubecontext
 
     def __str__(self) -> str:
         return str(self.obj)
@@ -120,7 +125,15 @@ class ApiObject(abc.ABC):
                         f"defined for resource ({self.version})"
                     )
             # If we did find it, initialize that client version.
-            self._api_client = c()
+            if self._kubeconfig:
+                self._api_client = c(
+                api_client=kubernetes.config.new_client_from_config(
+                    config_file=os.path.expandvars(os.path.expanduser(self._kubeconfig)),
+                    context=self._kubecontext
+            ))
+            else:
+                self._api_client = c()
+
         return self._api_client
 
     @classmethod

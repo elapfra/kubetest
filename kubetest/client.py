@@ -28,9 +28,10 @@ class TestClient:
             case will have its own namespace assigned.
     """
 
-    def __init__(self, namespace: str) -> None:
+    def __init__(self, namespace: str, kube_client: client.CoreV1Api) -> None:
         self.namespace = namespace
         self.pre_registered = []
+        self.kube_client = kube_client
 
     # ****** Generic Helpers on ApiObjects ******
 
@@ -900,9 +901,9 @@ class TestClient:
         selectors = utils.selector_kwargs(fields, labels)
 
         if all_namespaces:
-            results = client.CoreV1Api().list_event_for_all_namespaces(**selectors)
+            results = self.kube_client.list_event_for_all_namespaces(**selectors)
         else:
-            results = client.CoreV1Api().list_namespaced_event(
+            results = self.kube_client.list_namespaced_event(
                 namespace=self.namespace, **selectors
             )
 
@@ -988,8 +989,8 @@ class TestClient:
 
         return namespaces
 
-    @staticmethod
     def get_nodes(
+        self,
         fields: Dict[str, str] = None,
         labels: Dict[str, str] = None,
     ) -> Dict[str, objects.Node]:
@@ -1009,7 +1010,7 @@ class TestClient:
         """
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = client.CoreV1Api().list_node(
+        results = self.kube_client.list_node(
             **selectors,
         )
 
