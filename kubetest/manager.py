@@ -373,8 +373,8 @@ class KubetestManager:
         test_name: str,
         namespace_create: bool = True,
         namespace_name: str = None,
-        kubeconfig=None,  # Todo: Typing
-        kubecontext=None  # Todo: Typing
+        kubeconfig: Optional[str] = None,
+        kubecontext: Optional[str] = None
     ) -> TestMeta:
         """Create a new TestMeta for a test case.
 
