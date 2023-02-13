@@ -160,7 +160,7 @@ class TestMeta:
         self.name = name
         self.node_id = node_id
 
-        self.api_client = api_client or kubernetes.client.ApiClient()
+        self.api_client = api_client
 
         if namespace_name is None:
             self.ns = utils.new_namespace(name)
@@ -396,13 +396,10 @@ class KubetestManager:
         """
         log.info(f"creating test meta for {node_id}")
 
-        if kubeconfig:
-            api_client = kubernetes.config.new_client_from_config(
-                            config_file=os.path.expandvars(os.path.expanduser(kubeconfig)),
-                            context=kubecontext
-                )
-        else:
-            api_client = kubernetes.client.ApiClient()
+        api_client = kubernetes.config.new_client_from_config(
+            config_file=os.path.expandvars(os.path.expanduser(kubeconfig)),
+            context=kubecontext
+        ) if kubeconfig else None
 
         meta = TestMeta(
             node_id=node_id,
