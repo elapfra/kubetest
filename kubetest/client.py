@@ -1371,8 +1371,8 @@ class TestClient:
 
         return serviceaccount
 
-    @staticmethod
     def get_storageclasses(
+        self,
         fields: Dict[str, str] = None,
         labels: Dict[str, str] = None,
     ) -> Dict[str, objects.StorageClass]:
