@@ -1,8 +1,7 @@
 """Kubetest base class for the Kubernetes API Object wrappers."""
-
+import inspect
 import abc
 import logging
-import os
 from typing import Optional, Union
 
 import kubernetes
@@ -114,9 +113,7 @@ class ApiObject(abc.ABC):
             # If we didn't find the client in the api_clients dict, use the
             # preferred version.
             if c is None:
-                log.debug(
-                    f"unknown version ({self.version}), falling back to preferred version"
-                )
+                log.debug(f"unknown version ({self.version}), falling back to preferred version")
                 c = self.api_clients.get("preferred")
                 if c is None:
                     raise ValueError(
@@ -124,8 +121,10 @@ class ApiObject(abc.ABC):
                         f"defined for resource ({self.version})"
                     )
             # If we did find it, initialize that client version.
+            log.debug(f"Initialize _api_client for {inspect.getmro(self.__class__)[0].__name__} for {self.raw_api_client.configuration.host}")
             self._api_client = c(api_client=self.raw_api_client)
 
+        log.debug(f"Using _api_client for {inspect.getmro(self.__class__)[0].__name__} for {self.raw_api_client.configuration.host}")
         return self._api_client
 
     @classmethod
@@ -221,7 +220,7 @@ class ApiObject(abc.ABC):
         )
 
     @classmethod
-    def load(cls, path: str, name: Optional[str] = None) -> "ApiObject":
+    def load(cls, path: str, name: Optional[str] = None, api_client=None) -> "ApiObject":
         """Load the Kubernetes resource from file.
 
         Generally, this is used to load the Kubernetes manifest files
@@ -236,6 +235,7 @@ class ApiObject(abc.ABC):
                 manifest has multiple definitions containing the same
                 type, a name is required to differentiate between them.
                 If no name is specified in such case, an error is raised.
+            api_client:
 
         Returns:
             The API object wrapper corresponding to the configuration
@@ -281,7 +281,7 @@ class ApiObject(abc.ABC):
             )
 
         for o in filtered:
-            api_obj = cls(o)
+            api_obj = cls(o, api_client=api_client)
             if api_obj.name == name:
                 return api_obj
 

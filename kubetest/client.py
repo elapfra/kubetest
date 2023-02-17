@@ -615,7 +615,7 @@ class TestClient:
 
         clusterroles = {}
         for obj in results.items:
-            cr = objects.ClusterRole(obj)
+            cr = objects.ClusterRole(obj, api_client=self.api_client)
             clusterroles[cr.name] = cr
 
         return clusterroles
@@ -654,7 +654,7 @@ class TestClient:
 
         configmaps = {}
         for obj in results.items:
-            cm = objects.ConfigMap(obj)
+            cm = objects.ConfigMap(obj, api_client=self.api_client)
             configmaps[cm.name] = cm
 
         return configmaps
@@ -690,7 +690,7 @@ class TestClient:
         _custom_objects = {}
         for obj in results["items"]:
             custom_object = classs(
-                obj, crd=crd, group=group, version=version, plural=plural
+                obj, crd=crd, group=group, version=version, plural=plural, api_client=self.api_client
             )
             _custom_objects[custom_object.name] = custom_object
         return _custom_objects
@@ -726,7 +726,7 @@ class TestClient:
                 name,
                 **selectors,
             )
-        return classs(obj, crd=crd, group=group, version=version, plural=plural)
+        return classs(obj, crd=crd, group=group, version=version, plural=plural, api_client=self.api_client)
 
     def get_custom_resource_definitions(
         self,
@@ -745,7 +745,7 @@ class TestClient:
 
         crds = {}
         for obj in results.items:
-            crd = CustomResourceDefinition(obj)
+            crd = CustomResourceDefinition(obj, api_client=self.api_client)
             if by_kind:
                 crds[crd.kind] = crd
             else:
@@ -758,7 +758,7 @@ class TestClient:
                 name
             )
         )
-        return CustomResourceDefinition(obj)
+        return CustomResourceDefinition(obj, api_client=self.api_client)
 
     def get_daemonsets(
         self,
@@ -794,7 +794,7 @@ class TestClient:
 
         daemonsets = {}
         for obj in results.items:
-            daemonset = objects.DaemonSet(obj)
+            daemonset = objects.DaemonSet(obj, api_client=self.api_client)
             daemonsets[daemonset.name] = daemonset
 
         return daemonsets
@@ -833,7 +833,7 @@ class TestClient:
 
         deployments = {}
         for obj in results.items:
-            deployment = objects.Deployment(obj)
+            deployment = objects.Deployment(obj, api_client=self.api_client)
             deployments[deployment.name] = deployment
 
         return deployments
@@ -872,7 +872,7 @@ class TestClient:
 
         endpoints = {}
         for obj in results.items:
-            endpoint = objects.Endpoints(obj)
+            endpoint = objects.Endpoints(obj, api_client=self.api_client)
             endpoints[endpoint.name] = endpoint
 
         return endpoints
@@ -909,7 +909,7 @@ class TestClient:
 
         events = {}
         for obj in results.items:
-            event = objects.Event(obj)
+            event = objects.Event(obj, api_client=self.api_client)
             events[event.name] = event
 
         return events
@@ -952,7 +952,7 @@ class TestClient:
 
         jobs = {}
         for obj in results.items:
-            job = objects.Job(obj)
+            job = objects.Job(obj, api_client=self.api_client)
             jobs[job.name] = job
 
         return jobs
@@ -984,7 +984,7 @@ class TestClient:
 
         namespaces = {}
         for obj in results.items:
-            namespace = objects.Namespace(obj)
+            namespace = objects.Namespace(obj, api_client=self.api_client)
             namespaces[namespace.name] = namespace
 
         return namespaces
@@ -1016,7 +1016,7 @@ class TestClient:
 
         nodes = {}
         for obj in results.items:
-            node = objects.Node(obj)
+            node = objects.Node(obj, api_client=self.api_client)
             nodes[node.name] = node
 
         return nodes
@@ -1055,7 +1055,7 @@ class TestClient:
 
         pods = {}
         for obj in results.items:
-            pod = objects.Pod(obj)
+            pod = objects.Pod(obj, api_client=self.api_client)
             pods[pod.name] = pod
 
         return pods
@@ -1094,7 +1094,7 @@ class TestClient:
 
         secrets = {}
         for obj in results.items:
-            secret = objects.Secret(obj)
+            secret = objects.Secret(obj, api_client=self.api_client)
             secrets[secret.name] = secret
 
         return secrets
@@ -1133,7 +1133,7 @@ class TestClient:
 
         services = {}
         for obj in results.items:
-            service = objects.Service(obj)
+            service = objects.Service(obj, api_client=self.api_client)
             services[service.name] = service
 
         return services
@@ -1166,7 +1166,7 @@ class TestClient:
 
         persistentvolumes = {}
         for obj in results.items:
-            persistentvolume = objects.PersistentVolume(obj)
+            persistentvolume = objects.PersistentVolume(obj, api_client=self.api_client)
             persistentvolumes[persistentvolume.name] = persistentvolume
 
         return persistentvolumes
@@ -1174,12 +1174,14 @@ class TestClient:
     def get_persistentvolumeclaims(
         self,
         namespace: str = None,
+        all_namespaces: bool = False,
         fields: Dict[str, str] = None,
         labels: Dict[str, str] = None,
     ) -> Dict[str, objects.PersistentVolumeClaim]:
         """Get PersistentVolumeClaims from the cluster.
 
         Args:
+            all_namespaces: if True, overrides namespace arg and gets all pvs
             namespace: The namespace to get the PersistentVolumeClaim from. If not
                 specified, it will use the auto-generated test case namespace
                 by default.
@@ -1200,14 +1202,13 @@ class TestClient:
         selectors = utils.selector_kwargs(fields, labels)
 
         c = objects.PersistentVolumeClaim.preferred_client(api_client=self.api_client)
-        results = c.list_namespaced_persistent_volume_claim(
-            namespace=namespace,
-            **selectors,
-        )
+        results = c.list_persistent_volume_claim_for_all_namespaces(**selectors) \
+            if all_namespaces else \
+            c.list_namespaced_persistent_volume_claim(namespace=namespace, **selectors)
 
         persistentvolumeclaims = {}
         for obj in results.items:
-            persistentvolumeclaim = objects.PersistentVolumeClaim(obj)
+            persistentvolumeclaim = objects.PersistentVolumeClaim(obj, api_client=self.api_client)
             persistentvolumeclaims[persistentvolumeclaim.name] = persistentvolumeclaim
 
         return persistentvolumeclaims
@@ -1247,7 +1248,7 @@ class TestClient:
 
         ingresses = {}
         for obj in results.items:
-            ingress = objects.Ingress(obj)
+            ingress = objects.Ingress(obj, api_client=self.api_client)
             ingresses[ingress.name] = ingress
 
         return ingresses
@@ -1286,7 +1287,7 @@ class TestClient:
 
         replicasets = {}
         for obj in results.items:
-            rs = objects.ReplicaSet(obj)
+            rs = objects.ReplicaSet(obj, api_client=self.api_client)
             replicasets[rs.name] = rs
 
         return replicasets
@@ -1325,7 +1326,7 @@ class TestClient:
 
         statefulsets = {}
         for obj in results.items:
-            statefulset = objects.StatefulSet(obj)
+            statefulset = objects.StatefulSet(obj, api_client=self.api_client)
             statefulsets[statefulset.name] = statefulset
 
         return statefulsets
@@ -1366,7 +1367,7 @@ class TestClient:
 
         serviceaccount = {}
         for obj in results.items:
-            cm = objects.ServiceAccount(obj)
+            cm = objects.ServiceAccount(obj, api_client=self.api_client)
             serviceaccount[cm.name] = cm
 
         return serviceaccount
@@ -1399,7 +1400,7 @@ class TestClient:
 
         storageclasses = {}
         for obj in results.items:
-            sc = objects.StorageClass(obj)
+            sc = objects.StorageClass(obj, api_client=self.api_client)
             storageclasses[sc.name] = sc
 
         return storageclasses
