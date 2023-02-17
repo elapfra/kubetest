@@ -25,13 +25,14 @@ class Node:
         https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#node-v1-core
     """
 
-    def __init__(self, api_object) -> None:
+    def __init__(self, api_object, api_client=None) -> None:
         self.obj = api_object
         self.name = api_object.metadata.name
+        self.api_client = api_client
 
     def refresh(self) -> None:
         """Refresh the underlying Kubernetes Node resource."""
-        nodes = client.CoreV1Api().list_node()
+        nodes = client.CoreV1Api(api_client=self.api_client).list_node()
         for node in nodes.items:
             if node.metadata.name == self.name:
                 self.obj = node

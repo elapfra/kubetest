@@ -30,6 +30,7 @@ class Event:
         "events.k8s.io": client.CoreV1Event,
     }
 
-    def __init__(self, api_object) -> None:
+    def __init__(self, api_object, api_client=None) -> None:
         self.obj = api_object
         self.name = api_object.metadata.name
+        self.api_client=api_client
