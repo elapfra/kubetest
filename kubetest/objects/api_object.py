@@ -1,5 +1,4 @@
 """Kubetest base class for the Kubernetes API Object wrappers."""
-import inspect
 import abc
 import logging
 from typing import Optional, Union
@@ -113,7 +112,7 @@ class ApiObject(abc.ABC):
             # If we didn't find the client in the api_clients dict, use the
             # preferred version.
             if c is None:
-                log.debug(f"unknown version ({self.version}), falling back to preferred version")
+                # log.debug(f"unknown version ({self.version}), falling back to preferred version")
                 c = self.api_clients.get("preferred")
                 if c is None:
                     raise ValueError(
@@ -121,10 +120,10 @@ class ApiObject(abc.ABC):
                         f"defined for resource ({self.version})"
                     )
             # If we did find it, initialize that client version.
-            log.debug(f"Initialize _api_client for {inspect.getmro(self.__class__)[0].__name__} for {self.raw_api_client.configuration.host}")
+            # log.debug(f"Initialize _api_client for {inspect.getmro(self.__class__)[0].__name__} for {self.raw_api_client.configuration.host}")
             self._api_client = c(api_client=self.raw_api_client)
 
-        log.debug(f"Using _api_client for {inspect.getmro(self.__class__)[0].__name__} for {self.raw_api_client.configuration.host}")
+        # log.debug(f"Using _api_client for {inspect.getmro(self.__class__)[0].__name__} for {self.raw_api_client.configuration.host}")
         return self._api_client
 
     @classmethod

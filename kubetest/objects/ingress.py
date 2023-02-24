@@ -1,6 +1,7 @@
 """Kubetest wrapper for the Kubernetes ``Ingress`` API Object."""
 
 import logging
+from typing import Union
 
 from kubernetes import client
 
@@ -112,7 +113,7 @@ class Ingress(ApiObject):
         self.refresh()
         return self.obj.status.load_balancer.ingress is not None
 
-    def wait_for_load_balancer_ingress(self, timeout: int = None) -> None:
+    def wait_for_load_balancer_ingress(self, timeout: int = None, interval: Union[float, int] = 1) -> None:
         """Wait until the ingress has been assigned an ingress.
 
         Args:
@@ -120,6 +121,8 @@ class Ingress(ApiObject):
             Ingress to be assigned an ingress. If unspecified,
             this will wait indefinitely. If specified and the timeout
             is met or exceeded, a TimeoutError will be raised.
+            interval: The time, in seconds, to sleep before re-evaluating the
+                conditions. Default: 1s
 
         Raises:
             TimeoutError: The specified timeout was exceeded.
@@ -128,4 +131,4 @@ class Ingress(ApiObject):
             "Ingress has been assigned an ingress", self.has_load_balancer_ingress
         )
 
-        utils.wait_for_condition(condition=wait_condition, timeout=timeout, interval=1)
+        utils.wait_for_condition(condition=wait_condition, timeout=timeout, interval=interval)

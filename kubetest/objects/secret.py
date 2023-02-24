@@ -1,4 +1,5 @@
 """Kubetest wrapper for the Kubernetes ``Secret`` API Object."""
+import base64
 
 import logging
 
@@ -98,3 +99,15 @@ class Secret(ApiObject):
             return False
         else:
             return True
+
+    def decode(self, secret) -> str:
+        self.refresh()
+        if self.obj.data is None:
+            raise ValueError("No secret data")
+        if isinstance(secret, int):
+            encoded = list(self.obj.data.values())[secret]
+        elif isinstance(secret, str):
+            encoded =  self.obj.data[secret]
+        else:
+            raise TypeError("Invalid type for secret key")
+        return base64.b64decode(encoded).decode("utf-8")

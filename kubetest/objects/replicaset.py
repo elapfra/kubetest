@@ -2,19 +2,15 @@
 
 import logging
 import uuid
-from typing import List
 
 from kubernetes import client
 
-from kubetest.utils import selector_string
-
-from .api_object import ApiObject
-from .pod import Pod
+from .workload import Workload
 
 log = logging.getLogger("kubetest")
 
 
-class ReplicaSet(ApiObject):
+class ReplicaSet(Workload):
     """Kubetest wrapper around a Kubernetes `ReplicaSet`_ API Object.
 
     The actual ``kubernetes.client.V1ReplicaSet`` instance that this
@@ -34,11 +30,12 @@ class ReplicaSet(ApiObject):
         "apps/v1": client.AppsV1Api,
     }
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args, add_labels=True, **kwargs) -> None:
         super(ReplicaSet, self).__init__(*args, **kwargs)
-        self._add_kubetest_labels()
+        if add_labels:
+            self._add_kubetest_labels()
 
-        client.AppsV1Api().read_namespaced_replica_set(self.name, self.namespace)
+        client.AppsV1Api(api_client=self._api_client).read_namespaced_replica_set(self.name, self.namespace)
 
     def _add_kubetest_labels(self) -> None:
         """Add a kubetest label to the ReplicaSet object.
@@ -186,20 +183,3 @@ class ReplicaSet(ApiObject):
 
         # return the status from the replicaset
         return self.obj.status
-
-    def get_pods(self) -> List[Pod]:
-        """Get the pods for the ReplicaSet.
-
-        Returns:
-            A list of pods that belong to the replicaset.
-        """
-        log.info(f'getting pods for replicaset "{self.name}"')
-
-        pods = client.CoreV1Api().list_namespaced_pod(
-            namespace=self.namespace,
-            label_selector=selector_string({self.klabel_key: self.klabel_uid}),
-        )
-
-        pods = [Pod(p) for p in pods.items]
-        log.debug(f"pods: {pods}")
-        return pods

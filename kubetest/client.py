@@ -623,12 +623,14 @@ class TestClient:
     def get_configmaps(
         self,
         namespace: str = None,
+        all_namespaces: bool = False,
         fields: Dict[str, str] = None,
         labels: Dict[str, str] = None,
     ) -> Dict[str, objects.ConfigMap]:
         """Get ConfigMaps from the cluster.
 
         Args:
+            all_namespaces: if True will list configmaps for all namespaces
             namespace: The namespace to get the ConfigMaps from. If not specified,
                 it will use the auto-generated test case namespace by default.
             fields: A dictionary of fields used to restrict the returned collection
@@ -639,23 +641,26 @@ class TestClient:
                 default, no restricting is done.
 
         Returns:
-            A dictionary where the key is the ConfigMap name and the value is the
-            ConfigMap itself.
+            A dictionary where the key is the ConfigMap name or tuple of name & namespace if all_namespaces=True
+            and the value is the ConfigMap itself.
         """
-        if namespace is None:
-            namespace = self.namespace
+        if namespace and len(namespace) > 0 and all_namespaces:
+            raise AttributeError("Can not set namespace when all_namespaces=True")
 
         selectors = utils.selector_kwargs(fields, labels)
+        preferred_client = objects.ConfigMap.preferred_client(api_client=self.api_client)
 
-        results = objects.ConfigMap.preferred_client(api_client=self.api_client).list_namespaced_config_map(
-            namespace=namespace,
-            **selectors,
-        )
+        if all_namespaces:
+            results = preferred_client.list_config_map_for_all_namespaces(**selectors)
+        else:
+            if namespace is None:
+                namespace = self.namespace
+            results = preferred_client.list_namespaced_config_map(namespace=namespace, **selectors)
 
         configmaps = {}
         for obj in results.items:
             cm = objects.ConfigMap(obj, api_client=self.api_client)
-            configmaps[cm.name] = cm
+            configmaps[(cm.name, cm.namespace) if all_namespaces else cm.name] = cm
 
         return configmaps
 
@@ -666,24 +671,32 @@ class TestClient:
         version: str = None,
         plural: str = None,
         namespace: str = None,
+        all_namespaces: bool = False,
         fields: Dict[str, str] = None,
         labels: Dict[str, str] = None,
         classs=CustomObject,
     ) -> Dict[str, Any]:
-        selectors = utils.selector_kwargs(fields, labels)
 
-        if namespace:
-            results = CustomObject.preferred_client(api_client=self.api_client).list_namespaced_custom_object(
+        if namespace and len(namespace) > 0 and all_namespaces:
+            raise AttributeError("Can not set namespace when all_namespaces=True")
+
+        selectors = utils.selector_kwargs(fields, labels)
+        preferred_client = CustomObject.preferred_client(api_client=self.api_client)
+
+        if all_namespaces:
+            results = preferred_client.list_cluster_custom_object(
                 crd.obj.spec.group if crd else group,
                 crd.obj.spec.versions[-1].name if crd else version,
-                namespace,
                 crd.obj.spec.names.plural if crd else plural,
                 **selectors,
             )
         else:
-            results = CustomObject.preferred_client(api_client=self.api_client).list_cluster_custom_object(
+            if namespace is None:
+                namespace = self.namespace
+            results = preferred_client.list_namespaced_custom_object(
                 crd.obj.spec.group if crd else group,
                 crd.obj.spec.versions[-1].name if crd else version,
+                namespace,
                 crd.obj.spec.names.plural if crd else plural,
                 **selectors,
             )
@@ -692,40 +705,37 @@ class TestClient:
             custom_object = classs(
                 obj, crd=crd, group=group, version=version, plural=plural, api_client=self.api_client
             )
-            _custom_objects[custom_object.name] = custom_object
+            _custom_objects[(custom_object.name, custom_object.namespace) if all_namespaces else custom_object.name] = custom_object
         return _custom_objects
 
     def get_custom_object(
         self,
         name: str,
+        namespace: str = None,
         crd: CustomResourceDefinition = None,
         group: str = None,
         version: str = None,
         plural: str = None,
-        namespace: str = None,
         fields: Dict[str, str] = None,
         labels: Dict[str, str] = None,
         classs=CustomObject,
     ) -> CustomObject:
-        selectors = utils.selector_kwargs(fields, labels)
 
-        if namespace:
-            obj = CustomObject.preferred_client(api_client=self.api_client).get_namespaced_custom_object(
-                crd.obj.spec.group if crd else group,
-                crd.obj.spec.versions[-1].name if crd else version,
-                namespace,
-                crd.obj.spec.names.plural if crd else plural,
-                name,
-                **selectors,
-            )
-        else:
-            obj = CustomObject.preferred_client(api_client=self.api_client).get_cluster_custom_object(
-                crd.obj.spec.group if crd else group,
-                crd.obj.spec.versions[-1].name if crd else version,
-                crd.obj.spec.names.plural if crd else plural,
-                name,
-                **selectors,
-            )
+        selectors = utils.selector_kwargs(fields, labels)
+        preferred_client = CustomObject.preferred_client(api_client=self.api_client)
+
+        if namespace is None:
+            namespace = self.namespace
+
+        obj = preferred_client.get_namespaced_custom_object(
+            crd.obj.spec.group if crd else group,
+            crd.obj.spec.versions[-1].name if crd else version,
+            namespace,
+            crd.obj.spec.names.plural if crd else plural,
+            name,
+            **selectors,
+        )
+
         return classs(obj, crd=crd, group=group, version=version, plural=plural, api_client=self.api_client)
 
     def get_custom_resource_definitions(
@@ -763,12 +773,14 @@ class TestClient:
     def get_daemonsets(
         self,
         namespace: str = None,
+        all_namespaces: bool = False,
         fields: Dict[str, str] = None,
         labels: Dict[str, str] = None,
     ) -> Dict[str, objects.DaemonSet]:
         """Get DaemonSets from the cluster.
 
         Args:
+            all_namespaces: if True will list daemonsets for all namespaces
             namespace: The namespace to get the DaemonSets from. If not specified,
                 it will use the auto-generated test case namespace by default.
             fields: A dictionary of fields used to restrict the returned collection
@@ -779,35 +791,42 @@ class TestClient:
                 default, no restricting is done.
 
         Returns:
-            A dictionary where the key is the DaemonSet name and the value is the
-            DaemonSet itself.
+            A dictionary where the key is the DaemonSet name or tuple of name & namespace if all_namespaces=True
+            and the value is the DaemonSet itself.
         """
-        if namespace is None:
-            namespace = self.namespace
+        if namespace and len(namespace) > 0 and all_namespaces:
+            raise AttributeError("Can not set namespace when all_namespaces=True")
 
         selectors = utils.selector_kwargs(fields, labels)
+        preferred_client = objects.DaemonSet.preferred_client(api_client=self.api_client)
 
-        results = objects.DaemonSet.preferred_client(api_client=self.api_client).list_namespaced_daemon_set(
-            namespace=namespace,
-            **selectors,
-        )
+        if all_namespaces:
+            results = preferred_client.list_daemon_set_for_all_namespaces(**selectors)
+            add_labels = False
+        else:
+            if namespace is None:
+                namespace = self.namespace
+            add_labels = namespace == self.namespace
+            results = preferred_client.list_namespaced_daemon_set(namespace=namespace, **selectors)
 
         daemonsets = {}
         for obj in results.items:
-            daemonset = objects.DaemonSet(obj, api_client=self.api_client)
-            daemonsets[daemonset.name] = daemonset
+            daemonset = objects.DaemonSet(obj, api_client=self.api_client, add_labels=add_labels)
+            daemonsets[(daemonset.name, daemonset.namespace) if all_namespaces else daemonset.name] = daemonset
 
         return daemonsets
 
     def get_deployments(
         self,
         namespace: str = None,
+        all_namespaces: bool = False,
         fields: Dict[str, str] = None,
         labels: Dict[str, str] = None,
     ) -> Dict[str, objects.Deployment]:
         """Get Deployments from the cluster.
 
         Args:
+            all_namespaces: if True will list deployments for all namespaces
             namespace: The namespace to get the Deployments from. If not specified,
                 it will use the auto-generated test case namespace by default.
             fields: A dictionary of fields used to restrict the returned collection
@@ -818,35 +837,43 @@ class TestClient:
                 default, no restricting is done.
 
         Returns:
-            A dictionary where the key is the Deployment name and the value is the
-            Deployment itself.
+            A dictionary where the key is the Deployment name or tuple of name & namespace if all_namespaces=True
+            and the value is the Deployment itself.
         """
-        if namespace is None:
-            namespace = self.namespace
+        if namespace and len(namespace) > 0 and all_namespaces:
+            raise AttributeError("Can not set namespace when all_namespaces=True")
+
 
         selectors = utils.selector_kwargs(fields, labels)
+        preferred_client = objects.Deployment.preferred_client(api_client=self.api_client)
 
-        results = objects.Deployment.preferred_client(api_client=self.api_client).list_namespaced_deployment(
-            namespace=namespace,
-            **selectors,
-        )
+        if all_namespaces:
+            results = preferred_client.list_deployment_for_all_namespaces(**selectors)
+            add_labels = False
+        else:
+            if namespace is None:
+                namespace = self.namespace
+            add_labels = namespace == self.namespace
+            results = preferred_client.list_namespaced_deployment( namespace=namespace, **selectors)
 
         deployments = {}
         for obj in results.items:
-            deployment = objects.Deployment(obj, api_client=self.api_client)
-            deployments[deployment.name] = deployment
+            deployment = objects.Deployment(obj, api_client=self.api_client, add_labels=add_labels)
+            deployments[(deployment.name, deployment.namespace) if all_namespaces else deployment.name] = deployment
 
         return deployments
 
     def get_endpoints(
         self,
         namespace: str = None,
+        all_namespaces: bool = False,
         fields: Dict[str, str] = None,
         labels: Dict[str, str] = None,
     ) -> Dict[str, objects.Endpoints]:
         """Get Endpoints from the cluster.
 
         Args:
+            all_namespaces: if True will list endpoints for all namespaces
             namespace: The namespace to get the Endpoints from. If not specified,
                 it will use the auto-generated test case namespace by default.
             fields: A dictionary of fields used to restrict the returned collection
@@ -857,23 +884,26 @@ class TestClient:
                 default, no restricting is done.
 
         Returns:
-            A dictionary where the key is the Endpoint name and the value is the
-            Endpoint itself.
+            A dictionary where the key is the Endpoint name or tuple of name & namespace if all_namespaces=True
+            and the value is the Endpoint itself.
         """
-        if namespace is None:
-            namespace = self.namespace
+        if namespace and len(namespace) > 0 and all_namespaces:
+            raise AttributeError("Can not set namespace when all_namespaces=True")
 
         selectors = utils.selector_kwargs(fields, labels)
+        preferred_client = objects.Endpoints.preferred_client(api_client=self.api_client)
 
-        results = objects.Endpoints.preferred_client(api_client=self.api_client).list_namespaced_endpoints(
-            namespace=namespace,
-            **selectors,
-        )
+        if all_namespaces:
+            results = preferred_client.list_endpoints_for_all_namespaces(**selectors)
+        else:
+            if namespace is None:
+                namespace = self.namespace
+            results = preferred_client.list_namespaced_endpoints(namespace=namespace, **selectors)
 
         endpoints = {}
         for obj in results.items:
             endpoint = objects.Endpoints(obj, api_client=self.api_client)
-            endpoints[endpoint.name] = endpoint
+            endpoints[(endpoint.name, endpoint.namespace) if all_namespaces else endpoint.name] = endpoint
 
         return endpoints
 
@@ -895,22 +925,21 @@ class TestClient:
             all_namespaces: If True, get the events across all namespaces.
 
         Returns:
-            A dictionary where the key is the Event name and the value is the
-            Event itself.
+            A dictionary where the key is the Event name or tuple of name & namespace if all_namespaces=True
+            and the value is the Event itself.
         """
         selectors = utils.selector_kwargs(fields, labels)
+        preferred_client = client.CoreV1Api(api_client=self.api_client)
 
         if all_namespaces:
-            results = client.CoreV1Api(api_client=self.api_client).list_event_for_all_namespaces(**selectors)
+            results = preferred_client.list_event_for_all_namespaces(**selectors)
         else:
-            results = client.CoreV1Api(api_client=self.api_client).list_namespaced_event(
-                namespace=self.namespace, **selectors
-            )
+            results = preferred_client.list_namespaced_event(namespace=self.namespace, **selectors)
 
         events = {}
         for obj in results.items:
             event = objects.Event(obj, api_client=self.api_client)
-            events[event.name] = event
+            events[(event.name, event.namespace) if all_namespaces else event.name] = event
 
         return events
 
@@ -924,6 +953,7 @@ class TestClient:
         """Get the latest Jobs that occurred in the cluster.
 
         Args:
+            all_namespaces: if True will list jobs for all namespaces
             namespace: The namespace to get the Jobs from. If not specified,
                 it will use the auto-generated test case namespace by default.
             fields: A dictionary of fields used to restrict the returned collection
@@ -935,25 +965,26 @@ class TestClient:
             all_namespaces: If True, get the jobs across all namespaces.
 
         Returns:
-            A dictionary where the key is the Job name and the value is the
-            Job itself.
+            A dictionary where the key is the Job name or tuple of name & namespace if all_namespaces=True
+            and the value is the Job itself.
         """
-        if namespace is None:
-            namespace = self.namespace
+        if namespace and len(namespace) > 0 and all_namespaces:
+            raise AttributeError("Can not set namespace when all_namespaces=True")
 
         selectors = utils.selector_kwargs(fields, labels)
+        preferred_client = objects.Job.preferred_client(api_client=self.api_client)
 
         if all_namespaces:
-            results = client.BatchV1Api(api_client=self.api_client).list_job_for_all_namespaces(**selectors)
+            results = preferred_client.list_job_for_all_namespaces(**selectors)
         else:
-            results = client.BatchV1Api(api_client=self.api_client).list_namespaced_job(
-                namespace=namespace, **selectors
-            )
+            if namespace is None:
+                namespace = self.namespace
+            results = preferred_client.list_namespaced_job(namespace=namespace, **selectors)
 
         jobs = {}
         for obj in results.items:
             job = objects.Job(obj, api_client=self.api_client)
-            jobs[job.name] = job
+            jobs[(job.name, job.namespace) if all_namespaces else job.name] = job
 
         return jobs
 
@@ -1024,12 +1055,14 @@ class TestClient:
     def get_pods(
         self,
         namespace: str = None,
+        all_namespaces: bool = False,
         fields: Dict[str, str] = None,
         labels: Dict[str, str] = None,
     ) -> Dict[str, objects.Pod]:
         """Get Pods from the cluster.
 
         Args:
+            all_namespaces: if True will list pods for all namespaces
             namespace: The namespace to get the Pods from. If not specified,
                 it will use the auto-generated test case namespace by default.
             fields: A dictionary of fields used to restrict the returned collection
@@ -1040,35 +1073,40 @@ class TestClient:
                 no restricting is done.
 
         Returns:
-            A dictionary where the key is the Pod name and the value is the
-            Pod itself.
+            A dictionary where the key is the Pod name or tuple of name & namespace if all_namespaces=True
+            and the value is the Pod itself.
         """
-        if namespace is None:
-            namespace = self.namespace
+        if namespace and len(namespace) > 0 and all_namespaces:
+            raise AttributeError("Can not set namespace when all_namespaces=True")
 
         selectors = utils.selector_kwargs(fields, labels)
+        preferred_client = objects.Pod.preferred_client(api_client=self.api_client)
 
-        results = objects.Pod.preferred_client(api_client=self.api_client).list_namespaced_pod(
-            namespace=namespace,
-            **selectors,
-        )
+        if all_namespaces:
+            results = preferred_client.list_pod_for_all_namespaces(**selectors)
+        else:
+            if namespace is None:
+                namespace = self.namespace
+            results = preferred_client.list_namespaced_pod(namespace=namespace, **selectors)
 
         pods = {}
         for obj in results.items:
             pod = objects.Pod(obj, api_client=self.api_client)
-            pods[pod.name] = pod
+            pods[(pod.name, pod.namespace) if all_namespaces else pod.name] = pod
 
         return pods
 
     def get_secrets(
         self,
         namespace: str = None,
+        all_namespaces: bool = False,
         fields: Dict[str, str] = None,
         labels: Dict[str, str] = None,
     ) -> Dict[str, objects.Secret]:
         """Get Secrets from the cluster.
 
         Args:
+            all_namespaces: if True will list secrets for all namespaces
             namespace: The namespace to get the Secrets from. If not specified,
                 it will use the auto-generated test case namespace by default.
             fields: A dictionary of fields used to restrict the returned collection
@@ -1079,35 +1117,40 @@ class TestClient:
                 default, no restricting is done.
 
         Returns:
-            A dictionary where the key is the Secret name and the value is the
-            Secret itself.
+            A dictionary where the key is the Secret name or tuple of name & namespace if all_namespaces=True
+            and the value is the Secret itself.
         """
-        if namespace is None:
-            namespace = self.namespace
+        if namespace and len(namespace) > 0 and all_namespaces:
+            raise AttributeError("Can not set namespace when all_namespaces=True")
 
         selectors = utils.selector_kwargs(fields, labels)
+        preferred_client = objects.Secret.preferred_client(api_client=self.api_client)
 
-        results = objects.Secret.preferred_client(api_client=self.api_client).list_namespaced_secret(
-            namespace=namespace,
-            **selectors,
-        )
+        if all_namespaces:
+            results = preferred_client.list_secret_for_all_namespaces(**selectors)
+        else:
+            if namespace is None:
+                namespace = self.namespace
+            results = preferred_client.list_namespaced_secret(namespace=namespace, *selectors)
 
         secrets = {}
         for obj in results.items:
             secret = objects.Secret(obj, api_client=self.api_client)
-            secrets[secret.name] = secret
+            secrets[(secret.name, secret.namespace) if all_namespaces else secret.name] = secret
 
         return secrets
 
     def get_services(
         self,
         namespace: str = None,
+        all_namespaces: bool = False,
         fields: Dict[str, str] = None,
         labels: Dict[str, str] = None,
     ) -> Dict[str, objects.Service]:
         """Get Services under the test case namespace.
 
         Args:
+            all_namespaces: if True will list services for all namespaces
             namespace: The namespace to get the Services from. If not specified,
                 it will use the auto-generated test case namespace by default.
             fields: A dictionary of fields used to restrict the returned collection
@@ -1118,23 +1161,26 @@ class TestClient:
                 default, no restricting is done.
 
         Returns:
-            A dictionary where the key is the Service name and the value is the
-            Service itself.
+            A dictionary where the key is the Service name or tuple of name & namespace if all_namespaces=True
+            and the value is the Service itself.
         """
-        if namespace is None:
-            namespace = self.namespace
+        if namespace and len(namespace) > 0 and all_namespaces:
+            raise AttributeError("Can not set namespace when all_namespaces=True")
 
         selectors = utils.selector_kwargs(fields, labels)
+        preferred_client = objects.Service.preferred_client(api_client=self.api_client)
 
-        results = objects.Service.preferred_client(api_client=self.api_client).list_namespaced_service(
-            namespace=namespace,
-            **selectors,
-        )
+        if all_namespaces:
+            results = preferred_client.list_service_for_all_namespaces(**selectors)
+        else:
+            if namespace is None:
+                namespace = self.namespace
+            results = preferred_client.list_namespaced_service(namespace=namespace, **selectors)
 
         services = {}
         for obj in results.items:
             service = objects.Service(obj, api_client=self.api_client)
-            services[service.name] = service
+            services[(service.name, service.namespace) if all_namespaces else service.name] = service
 
         return services
 
@@ -1181,7 +1227,7 @@ class TestClient:
         """Get PersistentVolumeClaims from the cluster.
 
         Args:
-            all_namespaces: if True, overrides namespace arg and gets all pvs
+            all_namespaces: if True will list PVCs for all namespaces
             namespace: The namespace to get the PersistentVolumeClaim from. If not
                 specified, it will use the auto-generated test case namespace
                 by default.
@@ -1193,35 +1239,40 @@ class TestClient:
                 selectors. By default, no restricting is done.
 
         Returns:
-            A dictionary where the key is the PersistentVolumeClaim name and the
-            value is the PersistentVolumeClaim itself.
+            A dictionary where the key is the PersistentVolumeClaim name or tuple of name & namespace if all_namespaces=True
+            and the value is the PersistentVolumeClaim itself.
         """
-        if namespace is None:
-            namespace = self.namespace
+        if namespace and len(namespace) > 0 and all_namespaces:
+            raise AttributeError("Can not set namespace when all_namespaces=True")
 
         selectors = utils.selector_kwargs(fields, labels)
+        preferred_client = objects.PersistentVolumeClaim.preferred_client(api_client=self.api_client)
 
-        c = objects.PersistentVolumeClaim.preferred_client(api_client=self.api_client)
-        results = c.list_persistent_volume_claim_for_all_namespaces(**selectors) \
-            if all_namespaces else \
-            c.list_namespaced_persistent_volume_claim(namespace=namespace, **selectors)
+        if all_namespaces:
+            results = preferred_client.list_persistent_volume_claim_for_all_namespaces(**selectors)
+        else:
+            if namespace is None:
+                namespace = self.namespace
+            results = preferred_client.list_namespaced_persistent_volume_claim(namespace=namespace, **selectors)
 
         persistentvolumeclaims = {}
         for obj in results.items:
-            persistentvolumeclaim = objects.PersistentVolumeClaim(obj, api_client=self.api_client)
-            persistentvolumeclaims[persistentvolumeclaim.name] = persistentvolumeclaim
+            pvc = objects.PersistentVolumeClaim(obj, api_client=self.api_client)
+            persistentvolumeclaims[(pvc.name, pvc.namespace) if all_namespaces else pvc.name] = pvc.name
 
         return persistentvolumeclaims
 
     def get_ingresses(
         self,
         namespace: str = None,
+        all_namespaces: bool = False,
         fields: Dict[str, str] = None,
         labels: Dict[str, str] = None,
     ) -> Dict[str, objects.Ingress]:
         """Get Ingresses from the cluster.
 
         Args:
+            all_namespaces: if True will list ingresses for all namespaces
             namespace: The namespace to get the Ingress from. If not
                 specified, it will use the auto-generated test case namespace
                 by default.
@@ -1233,35 +1284,40 @@ class TestClient:
                 default, no restricting is done.
 
         Returns:
-            A dictionary where the key is the Ingress name and the value
-            is the Ingress itself.
+            A dictionary where the key is the Ingress name or tuple of name & namespace if all_namespaces=True
+            and the value is the Ingress itself.
         """
-        if namespace is None:
-            namespace = self.namespace
+        if namespace and len(namespace) > 0 and all_namespaces:
+            raise AttributeError("Can not set namespace when all_namespaces=True")
 
         selectors = utils.selector_kwargs(fields, labels)
+        preferred_client = objects.Ingress.preferred_client(api_client=self.api_client)
 
-        results = objects.Ingress.preferred_client(api_client=self.api_client).list_namespaced_ingress(
-            namespace=namespace,
-            **selectors,
-        )
+        if all_namespaces:
+            results = preferred_client.list_ingress_for_all_namespaces(**selectors)
+        else:
+            if namespace is None:
+                namespace = self.namespace
+            results = preferred_client.list_namespaced_ingress(namespace=namespace, **selectors)
 
         ingresses = {}
         for obj in results.items:
             ingress = objects.Ingress(obj, api_client=self.api_client)
-            ingresses[ingress.name] = ingress
+            ingresses[(ingress.name, ingress.namespace) if all_namespaces else ingress.name] = ingress
 
         return ingresses
 
     def get_replicasets(
         self,
         namespace: str = None,
+        all_namespaces: bool = False,
         fields: Dict[str, str] = None,
         labels: Dict[str, str] = None,
     ) -> Dict[str, objects.ReplicaSet]:
         """Get ReplicaSets from the cluster.
 
         Args:
+            all_namespaces: if True will list replicasets for all namespaces
             namespace: The namespace to get the ReplicaSets from. If not specified,
                 it will use the auto-generated test case namespace by default.
             fields: A dictionary of fields used to restrict the returned collection
@@ -1272,35 +1328,40 @@ class TestClient:
                 default, no restricting is done.
 
         Returns:
-            A dictionary where the key is the ReplicaSet name and the value is the
-            ReplicaSet itself.
+            A dictionary where the key is the ReplicaSet name or tuple of name & namespace if all_namespaces=True
+            and the value is the ReplicaSet itself.
         """
-        if namespace is None:
-            namespace = self.namespace
+        if namespace and len(namespace) > 0 and all_namespaces:
+            raise AttributeError("Can not set namespace when all_namespaces=True")
 
         selectors = utils.selector_kwargs(fields, labels)
+        preferred_client = objects.ReplicaSet.preferred_client(api_client=self.api_client)
 
-        results = objects.ReplicaSet.preferred_client(api_client=self.api_client).list_namespaced_replica_set(
-            namespace=namespace,
-            **selectors,
-        )
+        if all_namespaces:
+            results = preferred_client.list_replica_set_for_all_namespaces(**selectors)
+        else:
+            if namespace is None:
+                namespace = self.namespace
+            results = preferred_client.list_namespaced_replica_set(namespace=namespace, **selectors)
 
         replicasets = {}
         for obj in results.items:
             rs = objects.ReplicaSet(obj, api_client=self.api_client)
-            replicasets[rs.name] = rs
+            replicasets[(rs.name, rs.namespace) if all_namespaces else rs.name] = rs
 
         return replicasets
 
     def get_statefulsets(
         self,
         namespace: str = None,
+        all_namespaces: bool = False,
         fields: Dict[str, str] = None,
         labels: Dict[str, str] = None,
     ) -> Dict[str, objects.StatefulSet]:
         """Get StatefulSets from the cluster.
 
         Args:
+            all_namespaces: if True will list statefulsets for all namespaces
             namespace: The namespace to get the StatefulSets from. If not specified,
                 it will use the auto-generated test case namespace by default.
             fields: A dictionary of fields used to restrict the returned collection
@@ -1311,35 +1372,42 @@ class TestClient:
                 default, no restricting is done.
 
         Returns:
-            A dictionary where the key is the StatefulSet name and the value is the
-            StatefulSet itself.
+            A dictionary where the key is the StatefulSet name or tuple of name & namespace if all_namespaces=True
+            and the value is the StatefulSet itself.
         """
-        if namespace is None:
-            namespace = self.namespace
+        if namespace and len(namespace) > 0 and all_namespaces:
+            raise AttributeError("Can not set namespace when all_namespaces=True")
 
         selectors = utils.selector_kwargs(fields, labels)
+        preferred_client = objects.StatefulSet.preferred_client(api_client=self.api_client)
 
-        results = objects.StatefulSet.preferred_client(api_client=self.api_client).list_namespaced_stateful_set(
-            namespace=namespace,
-            **selectors,
-        )
+        if all_namespaces:
+            results = preferred_client.list_stateful_set_for_all_namespaces(**selectors)
+            add_labels = False
+        else:
+            if namespace is None:
+                namespace = self.namespace
+            add_labels = namespace == self.namespace
+            results = preferred_client.list_namespaced_stateful_set(namespace=namespace, **selectors)
 
         statefulsets = {}
         for obj in results.items:
-            statefulset = objects.StatefulSet(obj, api_client=self.api_client)
-            statefulsets[statefulset.name] = statefulset
+            sset = objects.StatefulSet(obj, api_client=self.api_client, add_labels=add_labels)
+            statefulsets[(sset.name, sset.namespace) if all_namespaces else sset.name] = sset
 
         return statefulsets
 
     def get_serviceaccounts(
         self,
         namespace: str = None,
+        all_namespaces: bool = False,
         fields: Dict[str, str] = None,
         labels: Dict[str, str] = None,
     ) -> Dict[str, objects.ServiceAccount]:
         """Get ServiceAccounts from the cluster.
 
         Args:
+            all_namespaces: if True will list service accounts for all namespaces
             namespace: The namespace to get the ServiceAccount from. If not specified,
                 it will use the auto-generated test case namespace by default.
             fields: A dictionary of fields used to restrict the returned collection
@@ -1350,25 +1418,26 @@ class TestClient:
                 default, no restricting is done.
 
         Returns:
-            A dictionary where the key is the ServiceAccount name and the value is the
-            ServiceAccount itself.
+            A dictionary where the key is the ServiceAccount name or tuple of name & namespace if all_namespaces=True
+            and the value is the ServiceAccount itself.
         """
-        if namespace is None:
-            namespace = self.namespace
+        if namespace and len(namespace) > 0 and all_namespaces:
+            raise AttributeError("Can not set namespace when all_namespaces=True")
 
         selectors = utils.selector_kwargs(fields, labels)
+        preferred_client = objects.ServiceAccount.preferred_client(api_client=self.api_client)
 
-        results = (
-            objects.ServiceAccount.preferred_client(api_client=self.api_client).list_namespaced_service_account(
-                namespace=namespace,
-                **selectors,
-            )
-        )
+        if all_namespaces:
+            results = preferred_client.list_service_account_for_all_namespaces(**selectors)
+        else:
+            if namespace is None:
+                namespace = self.namespace
+            results = preferred_client.list_namespaced_service_account(namespace=namespace, **selectors)
 
         serviceaccount = {}
         for obj in results.items:
-            cm = objects.ServiceAccount(obj, api_client=self.api_client)
-            serviceaccount[cm.name] = cm
+            sa = objects.ServiceAccount(obj, api_client=self.api_client)
+            serviceaccount[(sa.name, sa.namespace) if all_namespaces else sa.name] = sa
 
         return serviceaccount
 

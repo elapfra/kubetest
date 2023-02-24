@@ -2,19 +2,15 @@
 
 import logging
 import uuid
-from typing import List
 
 from kubernetes import client
 
-from kubetest.utils import selector_string
-
-from .api_object import ApiObject
-from .pod import Pod
+from .workload import Workload
 
 log = logging.getLogger("kubetest")
 
 
-class Deployment(ApiObject):
+class Deployment(Workload):
     """Kubetest wrapper around a Kubernetes `Deployment`_ API Object.
 
     The actual ``kubernetes.client.V1Deployment`` instance that this
@@ -34,9 +30,10 @@ class Deployment(ApiObject):
         "apps/v1": client.AppsV1Api,
     }
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args, add_labels=True, **kwargs) -> None:
         super(Deployment, self).__init__(*args, **kwargs)
-        self._add_kubetest_labels()
+        if add_labels:
+            self._add_kubetest_labels()
 
     def _add_kubetest_labels(self) -> None:
         """Add a kubetest label to the Deployment object.
@@ -185,19 +182,7 @@ class Deployment(ApiObject):
         # return the status from the deployment
         return self.obj.status
 
-    def get_pods(self) -> List[Pod]:
-        """Get the pods for the Deployment.
-
-        Returns:
-            A list of pods that belong to the deployment.
-        """
-        log.info(f'getting pods for deployment "{self.name}"')
-
-        pods = client.CoreV1Api().list_namespaced_pod(
-            namespace=self.namespace,
-            label_selector=selector_string({self.klabel_key: self.klabel_uid}),
-        )
-
-        pods = [Pod(p) for p in pods.items]
-        log.debug(f"pods: {pods}")
-        return pods
+    def scale(self, replicas):
+        log.info(f"Scaling deployment {self.name} to {replicas} pods")
+        return self.api_client.patch_namespaced_deployment_scale(
+            self.name, self.namespace, {"spec": {"replicas": replicas}})
