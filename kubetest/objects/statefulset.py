@@ -8,13 +8,13 @@ from kubernetes import client
 
 from kubetest.utils import selector_string
 
-from .api_object import ApiObject
+from .workload import Workload
 from .pod import Pod
 
 log = logging.getLogger("kubetest")
 
 
-class StatefulSet(ApiObject):
+class StatefulSet(Workload):
     """Kubetest wrapper around a Kubernetes `StatefulSet`_ API Object.
 
     The actual ``kubernetes.client.V1StatefulSet`` instance that this
@@ -34,9 +34,10 @@ class StatefulSet(ApiObject):
         "apps/v1": client.AppsV1Api,
     }
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args, add_labels=True, **kwargs) -> None:
         super(StatefulSet, self).__init__(*args, **kwargs)
-        self._add_kubetest_labels()
+        if add_labels:
+            self._add_kubetest_labels()
 
     def _add_kubetest_labels(self) -> None:
         """Add a kubetest label to the StatefulSet object.
@@ -185,19 +186,7 @@ class StatefulSet(ApiObject):
         # return the status from the statefulset
         return self.obj.status
 
-    def get_pods(self) -> List[Pod]:
-        """Get the pods for the StatefulSet.
-
-        Returns:
-            A list of pods that belong to the statefulset.
-        """
-        log.info(f'getting pods for statefulset "{self.name}"')
-
-        pods = client.CoreV1Api().list_namespaced_pod(
-            namespace=self.namespace,
-            label_selector=selector_string({self.klabel_key: self.klabel_uid}),
-        )
-
-        pods = [Pod(p) for p in pods.items]
-        log.debug(f"pods: {pods}")
-        return pods
+    def scale(self, replicas):
+        log.info(f"Scaling statefulset {self.name} to {replicas} pods")
+        return self.api_client.patch_namespaced_stateful_set_scale(
+            self.name, self.namespace, {"spec": {"replicas": replicas}})

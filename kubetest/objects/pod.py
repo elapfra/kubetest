@@ -193,7 +193,7 @@ class Pod(ApiObject):
         Returns:
             The response data.
         """
-        c = client.CoreV1Api()
+        c = client.CoreV1Api(api_client=self.raw_api_client)
 
         if query_params is None:
             query_params = {}
@@ -266,7 +266,7 @@ class Pod(ApiObject):
         Returns:
             The response data.
         """
-        c = client.CoreV1Api()
+        c = client.CoreV1Api(api_client=self.raw_api_client)
 
         if query_params is None:
             query_params = {}
@@ -339,7 +339,7 @@ class Pod(ApiObject):
 
         return containers_started
 
-    def wait_until_containers_start(self, timeout: int = None) -> None:
+    def wait_until_containers_start(self, timeout: int = None, interval: Union[float, int] = 1) -> None:
         """Wait until all containers in the Pod have started.
 
         This will wait for the images to be pulled and for the containers
@@ -354,6 +354,8 @@ class Pod(ApiObject):
                 Pod's containers to be started. If unspecified, this will
                 wait indefinitely. If specified and the timeout is met or
                 exceeded, a TimeoutError will be raised.
+            interval: The time, in seconds, to sleep before re-evaluating the
+                conditions. Default: 1s
 
         Raises:
             TimeoutError: The specified timeout was exceeded.
@@ -366,5 +368,5 @@ class Pod(ApiObject):
         utils.wait_for_condition(
             condition=wait_condition,
             timeout=timeout,
-            interval=1,
+            interval=interval,
         )

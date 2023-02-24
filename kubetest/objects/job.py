@@ -2,18 +2,15 @@
 
 import logging
 import uuid
-from typing import List
 
 from kubernetes import client
 
-from kubetest.objects.api_object import ApiObject
-from kubetest.objects.pod import Pod
-from kubetest.utils import selector_string
+from .workload import Workload
 
 log = logging.getLogger("kubetest")
 
 
-class Job(ApiObject):
+class Job(Workload):
     """Kubetest wrapper around a Kubernetes `Job`_ API Object.
 
     The actual ``kubernetes.client.V1Job`` instance that this
@@ -33,9 +30,10 @@ class Job(ApiObject):
         "batch/v1": client.BatchV1Api,
     }
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args, add_labels=True, **kwargs) -> None:
         super(Job, self).__init__(*args, **kwargs)
-        self._add_kubetest_labels()
+        if add_labels:
+            self._add_kubetest_labels()
 
     def _add_kubetest_labels(self) -> None:
         """Add a kubetest label to the Job object.
@@ -207,20 +205,3 @@ class Job(ApiObject):
             failed = status.failed
 
         return active, succeeded, failed
-
-    def get_pods(self) -> List[Pod]:
-        """Get the pods for the Job.
-
-        Returns:
-            A list of pods that belong to the Job.
-        """
-        log.info(f'getting pods for job "{self.name}"')
-
-        pods = client.CoreV1Api().list_namespaced_pod(
-            namespace=self.namespace,
-            label_selector=selector_string({self.klabel_key: self.klabel_uid}),
-        )
-
-        pods = [Pod(p) for p in pods.items]
-        log.debug(f"pods: {pods}")
-        return pods

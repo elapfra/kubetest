@@ -50,16 +50,17 @@ class Container:
 
         raise RuntimeError(f"Unable to determine container status for {container_name}")
 
-    def get_logs(self) -> str:
+    def get_logs(self, **kwargs) -> str:
         """Get all the logs for the Container.
 
         Returns:
             The Container logs.
         """
-        return client.CoreV1Api().read_namespaced_pod_log(
+        return client.CoreV1Api(api_client=self.pod.raw_api_client).read_namespaced_pod_log(
             name=self.pod.name,
             namespace=self.pod.namespace,
             container=self.obj.name,
+            ** kwargs
         )
 
     def search_logs(self, *keyword: str) -> bool:

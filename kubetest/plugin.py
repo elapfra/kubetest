@@ -342,8 +342,8 @@ def pytest_keyboard_interrupt():
     See Also:
         https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_keyboard_interrupt
 
-    Todo: Need to support multiple clusters here.
-    Todo: Probably each cluster needs to be registered in a list so can be cleaned up later.
+    ToDo: Don't need to support multiple clusters yet - until plugin supports multiple configs
+          Probably each cluster needs to be registered in a list so can be cleaned up later.
     """
     try:
         namespaces = kubernetes.client.CoreV1Api().list_namespace()

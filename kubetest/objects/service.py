@@ -186,7 +186,7 @@ class Service(ApiObject):
             "namespace": self.namespace,
             "path": path,
         }
-        return client.CoreV1Api().api_client.call_api(
+        return client.CoreV1Api(api_client=self.raw_api_client).api_client.call_api(
             "/api/v1/namespaces/{namespace}/services/{name}/proxy/{path}",
             method,
             path_params=path_params,
