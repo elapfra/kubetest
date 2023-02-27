@@ -1258,7 +1258,7 @@ class TestClient:
         persistentvolumeclaims = {}
         for obj in results.items:
             pvc = objects.PersistentVolumeClaim(obj, api_client=self.api_client)
-            persistentvolumeclaims[(pvc.name, pvc.namespace) if all_namespaces else pvc.name] = pvc.name
+            persistentvolumeclaims[(pvc.name, pvc.namespace) if all_namespaces else pvc.name] = pvc
 
         return persistentvolumeclaims
 
