@@ -394,7 +394,7 @@ class KubetestManager:
         Returns:
             The newly created TestMeta for the test case.
         """
-        log.info(f"creating test meta for {node_id}")
+        log.debug(f"creating test meta for {node_id}")
 
         api_client = kubernetes.config.new_client_from_config(
             config_file=os.path.expandvars(os.path.expanduser(kubeconfig)),
