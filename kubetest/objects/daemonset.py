@@ -164,7 +164,7 @@ class DaemonSet(Workload):
         desired = status.desired_number_scheduled
         ready = status.number_ready
 
-        if desired is None:
+        if desired is None or desired == 0:
             return False
 
         return desired == ready
