@@ -7,9 +7,10 @@ from typing import List
 
 from kubernetes import client
 
+from kubetest.utils import selector_string
+
 from .api_object import ApiObject
 from .pod import Pod
-from kubetest.utils import selector_string
 
 log = logging.getLogger("kubetest")
 
@@ -55,8 +56,7 @@ class Workload(ApiObject):
                 # TODO
                 pass
         pods = client.CoreV1Api(api_client=self.raw_api_client).list_namespaced_pod(
-            namespace=self.namespace,
-            label_selector=selector
+            namespace=self.namespace, label_selector=selector
         )
 
         pods = [Pod(p) for p in pods.items]

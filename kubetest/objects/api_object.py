@@ -49,7 +49,9 @@ class ApiObject(abc.ABC):
     is not specified for the resource.
     """
 
-    def __init__(self, api_object, api_client: kubernetes.client.ApiClient = None) -> None:
+    def __init__(
+        self, api_object, api_client: kubernetes.client.ApiClient = None
+    ) -> None:
         # The underlying Kubernetes Api Object
         self.obj = api_object
 
@@ -120,10 +122,14 @@ class ApiObject(abc.ABC):
                         f"defined for resource ({self.version})"
                     )
             # If we did find it, initialize that client version.
-            # log.debug(f"Initialize _api_client for {inspect.getmro(self.__class__)[0].__name__} for {self.raw_api_client.configuration.host}")
+            # log.debug(
+            #    f"Initialize _api_client for {inspect.getmro(self.__class__)[0].__name__} "
+            #    f"for {self.raw_api_client.configuration.host}")
             self._api_client = c(api_client=self.raw_api_client)
 
-        # log.debug(f"Using _api_client for {inspect.getmro(self.__class__)[0].__name__} for {self.raw_api_client.configuration.host}")
+        # log.debug(
+        #    f"Using _api_client for {inspect.getmro(self.__class__)[0].__name__} "
+        #    f"for {self.raw_api_client.configuration.host}")
         return self._api_client
 
     @classmethod
@@ -219,7 +225,9 @@ class ApiObject(abc.ABC):
         )
 
     @classmethod
-    def load(cls, path: str, name: Optional[str] = None, api_client=None) -> "ApiObject":
+    def load(
+        cls, path: str, name: Optional[str] = None, api_client=None
+    ) -> "ApiObject":
         """Load the Kubernetes resource from file.
 
         Generally, this is used to load the Kubernetes manifest files

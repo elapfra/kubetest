@@ -1,9 +1,9 @@
 """Unit tests for the kubetest.manager package."""
 
-from kubetest import manager
-from unittest import mock
 import os
 import time
+
+from kubetest import manager
 
 
 def test_manager_new_test():
@@ -77,17 +77,21 @@ def test_manager_setup(cluster_dir, kubernetes_requests_mock, expected_request_k
     c.setup()
 
     kwargs = expected_request_kwargs(c.ns)
-    kubernetes_requests_mock.assert_called_with('POST', 'https://127.0.0.1/api/v1/namespaces', **kwargs)
+    kubernetes_requests_mock.assert_called_with(
+        "POST", "https://127.0.0.1/api/v1/namespaces", **kwargs
+    )
 
     assert "kubetest-test-name-" in c.ns
 
     assert len(m1.nodes) == 1
     assert "node-id" in m1.nodes
 
-    assert c.api_client.configuration.host == 'https://127.0.0.1'
+    assert c.api_client.configuration.host == "https://127.0.0.1"
 
 
-def test_multiple_manager_setup(cluster_dir, kubernetes_requests_mock, expected_request_kwargs):
+def test_multiple_manager_setup(
+    cluster_dir, kubernetes_requests_mock, expected_request_kwargs
+):
     """Test manager for a single clusters."""
 
     kubeconfig1 = os.path.join(cluster_dir, "kube_config_cluster1.yaml")
@@ -99,7 +103,9 @@ def test_multiple_manager_setup(cluster_dir, kubernetes_requests_mock, expected_
     assert len(m2.nodes) == 0
 
     c1 = m1.new_test("node-id", "test-name", True, None, kubeconfig=kubeconfig1)
-    time.sleep(1)     # Guarantees second cluster namespace is generated with a different name
+    time.sleep(
+        1
+    )  # Guarantees second cluster namespace is generated with a different name
     c2 = m2.new_test("node-id", "test-name", True, None, kubeconfig=kubeconfig2)
 
     assert isinstance(c1, manager.TestMeta)
@@ -109,10 +115,14 @@ def test_multiple_manager_setup(cluster_dir, kubernetes_requests_mock, expected_
     kwargs_c2 = expected_request_kwargs(c2.ns)
 
     c1.setup()
-    kubernetes_requests_mock.assert_called_with('POST', 'https://127.0.0.1/api/v1/namespaces', **kwargs_c1)
+    kubernetes_requests_mock.assert_called_with(
+        "POST", "https://127.0.0.1/api/v1/namespaces", **kwargs_c1
+    )
 
     c2.setup()
-    kubernetes_requests_mock.assert_called_with('POST', 'https://::1/api/v1/namespaces', **kwargs_c2)
+    kubernetes_requests_mock.assert_called_with(
+        "POST", "https://::1/api/v1/namespaces", **kwargs_c2
+    )
 
     assert "kubetest-test-name-" in c1.ns
     assert "kubetest-test-name-" in c2.ns
@@ -125,5 +135,5 @@ def test_multiple_manager_setup(cluster_dir, kubernetes_requests_mock, expected_
     assert len(m2.nodes) == 1
     assert "node-id" in m2.nodes
 
-    assert c1.api_client.configuration.host == 'https://127.0.0.1'
-    assert c2.api_client.configuration.host == 'https://::1'
+    assert c1.api_client.configuration.host == "https://127.0.0.1"
+    assert c2.api_client.configuration.host == "https://::1"

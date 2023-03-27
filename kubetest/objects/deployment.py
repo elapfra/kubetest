@@ -185,4 +185,5 @@ class Deployment(Workload):
     def scale(self, replicas):
         log.info(f"Scaling deployment {self.name} to {replicas} pods")
         return self.api_client.patch_namespaced_deployment_scale(
-            self.name, self.namespace, {"spec": {"replicas": replicas}})
+            self.name, self.namespace, {"spec": {"replicas": replicas}}
+        )
