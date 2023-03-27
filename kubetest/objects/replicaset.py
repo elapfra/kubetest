@@ -35,7 +35,9 @@ class ReplicaSet(Workload):
         if add_labels:
             self._add_kubetest_labels()
 
-        client.AppsV1Api(api_client=self._api_client).read_namespaced_replica_set(self.name, self.namespace)
+        client.AppsV1Api(api_client=self._api_client).read_namespaced_replica_set(
+            self.name, self.namespace
+        )
 
     def _add_kubetest_labels(self) -> None:
         """Add a kubetest label to the ReplicaSet object.

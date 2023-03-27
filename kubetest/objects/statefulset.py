@@ -2,14 +2,10 @@
 
 import logging
 import uuid
-from typing import List
 
 from kubernetes import client
 
-from kubetest.utils import selector_string
-
 from .workload import Workload
-from .pod import Pod
 
 log = logging.getLogger("kubetest")
 
@@ -189,4 +185,5 @@ class StatefulSet(Workload):
     def scale(self, replicas):
         log.info(f"Scaling statefulset {self.name} to {replicas} pods")
         return self.api_client.patch_namespaced_stateful_set_scale(
-            self.name, self.namespace, {"spec": {"replicas": replicas}})
+            self.name, self.namespace, {"spec": {"replicas": replicas}}
+        )

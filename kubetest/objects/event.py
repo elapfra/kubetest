@@ -34,4 +34,4 @@ class Event:
         self.obj = api_object
         self.name = api_object.metadata.name
         self.namespace = api_object.metadata.namespace
-        self.api_client=api_client
+        self.api_client = api_client

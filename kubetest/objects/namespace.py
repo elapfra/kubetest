@@ -31,7 +31,9 @@ class Namespace(ApiObject):
     }
 
     @classmethod
-    def new(cls, name: str, api_client: kubernetes.client.ApiClient = None) -> "Namespace":
+    def new(
+        cls, name: str, api_client: kubernetes.client.ApiClient = None
+    ) -> "Namespace":
         """Create a new Namespace with object backing.
 
         Args:
@@ -41,7 +43,10 @@ class Namespace(ApiObject):
         Returns:
             A new Namespace instance.
         """
-        return cls(client.V1Namespace(metadata=client.V1ObjectMeta(name=name)), api_client=api_client)
+        return cls(
+            client.V1Namespace(metadata=client.V1ObjectMeta(name=name)),
+            api_client=api_client,
+        )
 
     def create(self, name: str = None) -> None:
         """Create the Namespace under the given name.

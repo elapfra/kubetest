@@ -1,9 +1,9 @@
 """Test fixtures for kubetest unit tests."""
+import datetime
 import json
 import os
-import datetime
-from unittest.mock import Mock, ANY
-from typing import Dict, Any
+from typing import Any, Dict
+from unittest.mock import ANY, Mock
 
 import pytest
 import urllib3.request
@@ -228,62 +228,78 @@ def cluster_dir():
 
 class UnavailableHostException(BaseException):
     def __init__(self, host: str):
-        self.message = f"Only 'https://127.0.0.1 and 'https://::1 clusters hosts are mocked. Host {host} not supported."
+        self.message = (
+            f"Only 'https://127.0.0.1 and 'https://::1 clusters hosts are mocked. "
+            f"Host {host} not supported."
+        )
 
 
 class URLOrMethodNotRecognised(BaseException):
     def __init__(self, method: str, url: str):
-        self.message = f"Only '/api/v1/namespaces' POST requests are mocked. {method} requests to {url} not supported."
+        self.message = (
+            f"Only '/api/v1/namespaces' POST requests are mocked. "
+            f"{method} requests to {url} not supported."
+        )
 
 
 class MockResponse:
     def __init__(self, status: int, reason: str, data: Dict[str, Any]):
         self.status = status
         self.reason = reason
-        self.data = json.dumps(data).encode() + b'\n'
+        self.data = json.dumps(data).encode() + b"\n"
 
 
 @pytest.fixture
 def kubernetes_requests_mock(monkeypatch):
     # mocked object, which only has the .json() method.
     def mock_urllib_request(method, url, fields=None, headers=None, **urlopen_kw):
-        utc_time = datetime.datetime.utcnow().isoformat()[:-3]+'Z'
-        body = urlopen_kw.get('body')
+        utc_time = datetime.datetime.utcnow().isoformat()[:-3] + "Z"
+        body = urlopen_kw.get("body")
         data = json.loads(body) if body else {}
-        metadata = data.get('metadata', {})
+        metadata = data.get("metadata", {})
         if method == "POST":
             if "/api/v1/namespaces" in url:
                 # create namespace
-                name = metadata['name']
-                if url.startswith('https://127.0.0.1'):
+                name = metadata["name"]
+                if url.startswith("https://127.0.0.1"):
                     uid = "00000000-0000-0000-0000-000000000000"
-                elif url.startswith('https://::1'):
+                elif url.startswith("https://::1"):
                     uid = "00000000-0000-0000-0000-000000000001"
                 else:
                     raise UnavailableHostException
-                data = {"kind": "Namespace",
-                        "apiVersion": "v1",
-                        "metadata":
-                        {"name": name,
-                          "uid": uid,
-                          "resourceVersion": "121606904",
-                           "creationTimestamp": utc_time,
-                          "labels": {
-                                 "kubernetes.io/metadata.name": name},
-                          "managedFields": [{
+                data = {
+                    "kind": "Namespace",
+                    "apiVersion": "v1",
+                    "metadata": {
+                        "name": name,
+                        "uid": uid,
+                        "resourceVersion": "121606904",
+                        "creationTimestamp": utc_time,
+                        "labels": {"kubernetes.io/metadata.name": name},
+                        "managedFields": [
+                            {
                                 "manager": "OpenAPI-Generator",
                                 "operation": "Update",
                                 "apiVersion": "v1",
-                                 "time": utc_time,
-                                 "fieldsType": "FieldsV1",
-                                 "fieldsV1": {
-                                     "f:metadata": {
-                                         "f:labels": {
-                                             ".": {}, "f:kubernetes.io/metadata.name": {}}}}}]}, "spec": {
-                          "finalizers": ["kubernetes"]},
-                        "status": {"phase": "Active"}}
+                                "time": utc_time,
+                                "fieldsType": "FieldsV1",
+                                "fieldsV1": {
+                                    "f:metadata": {
+                                        "f:labels": {
+                                            ".": {},
+                                            "f:kubernetes.io/metadata.name": {},
+                                        }
+                                    }
+                                },
+                            }
+                        ],
+                    },
+                    "spec": {"finalizers": ["kubernetes"]},
+                    "status": {"phase": "Active"},
+                }
                 return MockResponse(status=201, reason="created", data=data)
         raise URLOrMethodNotRecognised
+
     # apply the monkeypatch for requests.get to mock_get
     mock = Mock(side_effect=mock_urllib_request)
     monkeypatch.setattr(urllib3.request.RequestMethods, "request", mock)
@@ -292,7 +308,13 @@ def kubernetes_requests_mock(monkeypatch):
 
 @pytest.fixture
 def expected_request_kwargs():
-    return lambda n: {'body': '{"metadata": {"name": "%s"}}' % n, 'preload_content': ANY,
-                      'timeout': ANY,
-                      'headers': {'Accept': 'application/json', 'User-Agent': ANY,
-                                  'Content-Type': 'application/json'}}
+    return lambda n: {
+        "body": '{"metadata": {"name": "%s"}}' % n,
+        "preload_content": ANY,
+        "timeout": ANY,
+        "headers": {
+            "Accept": "application/json",
+            "User-Agent": ANY,
+            "Content-Type": "application/json",
+        },
+    }

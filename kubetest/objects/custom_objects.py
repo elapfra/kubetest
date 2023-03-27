@@ -15,7 +15,15 @@ class CustomObject(ApiObject):
         "v1": client.CustomObjectsApi,
     }
 
-    def __init__(self, api_object, crd=None, group=None, version=None, plural=None, api_client=None):
+    def __init__(
+        self,
+        api_object,
+        crd=None,
+        group=None,
+        version=None,
+        plural=None,
+        api_client=None,
+    ):
         super().__init__(api_object, api_client=api_client)
         self._group = crd.obj.spec.group if crd else group
         self._version = crd.obj.spec.versions[-1].name if crd else version

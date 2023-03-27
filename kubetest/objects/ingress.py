@@ -113,7 +113,9 @@ class Ingress(ApiObject):
         self.refresh()
         return self.obj.status.load_balancer.ingress is not None
 
-    def wait_for_load_balancer_ingress(self, timeout: int = None, interval: Union[float, int] = 1) -> None:
+    def wait_for_load_balancer_ingress(
+        self, timeout: int = None, interval: Union[float, int] = 1
+    ) -> None:
         """Wait until the ingress has been assigned an ingress.
 
         Args:
@@ -131,4 +133,6 @@ class Ingress(ApiObject):
             "Ingress has been assigned an ingress", self.has_load_balancer_ingress
         )
 
-        utils.wait_for_condition(condition=wait_condition, timeout=timeout, interval=interval)
+        utils.wait_for_condition(
+            condition=wait_condition, timeout=timeout, interval=interval
+        )

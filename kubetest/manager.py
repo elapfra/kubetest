@@ -2,8 +2,7 @@
 
 import logging
 import os
-
-from typing import Generator, List, Union, Optional
+from typing import Generator, List, Optional, Union
 
 import kubernetes
 
@@ -154,7 +153,7 @@ class TestMeta:
         node_id: str,
         namespace_create: bool = True,
         namespace_name: str = None,
-        api_client: kubernetes.client.ApiClient = None
+        api_client: kubernetes.client.ApiClient = None,
     ) -> None:
 
         self.name = name
@@ -189,7 +188,6 @@ class TestMeta:
         if self._client is None:
             self._client = client.TestClient(self.ns, self.api_client)
         return self._client
-
 
     @property
     def namespace(self) -> objects.Namespace:
@@ -275,9 +273,9 @@ class TestMeta:
             # prior to tearing down the namespace and cleaning up all of the
             # objects in the namespace, get the logs for the containers in the
             # namespace.
-            pods_list = kubernetes.client.CoreV1Api(api_client=self.api_client).list_namespaced_pod(
-                namespace=self.ns
-            )
+            pods_list = kubernetes.client.CoreV1Api(
+                api_client=self.api_client
+            ).list_namespaced_pod(namespace=self.ns)
         except Exception as e:
             log.warning(
                 f'Unable to get pods for namespace "{self.ns}" to cache logs ({e})',
@@ -294,7 +292,9 @@ class TestMeta:
                 pod_ns = pod.metadata.namespace
                 container_name = container.name
                 try:
-                    logs = kubernetes.client.CoreV1Api(api_client=self.api_client).read_namespaced_pod_log(
+                    logs = kubernetes.client.CoreV1Api(
+                        api_client=self.api_client
+                    ).read_namespaced_pod_log(
                         name=pod_name,
                         namespace=pod_ns,
                         container=container_name,
@@ -361,7 +361,6 @@ class KubetestManager:
     """
 
     def __init__(self):
-
         # A dictionary mapping test node IDs to their corresponding TestMeta
         # object. Each test node will have a TestMeta created when the client
         # is created for the test node.
@@ -374,7 +373,7 @@ class KubetestManager:
         namespace_create: bool = True,
         namespace_name: str = None,
         kubeconfig: Optional[str] = None,
-        kubecontext: Optional[str] = None
+        kubecontext: Optional[str] = None,
     ) -> TestMeta:
         """Create a new TestMeta for a test case.
 
@@ -396,17 +395,21 @@ class KubetestManager:
         """
         log.debug(f"creating test meta for {node_id}")
 
-        api_client = kubernetes.config.new_client_from_config(
-            config_file=os.path.expandvars(os.path.expanduser(kubeconfig)),
-            context=kubecontext
-        ) if kubeconfig else None
+        api_client = (
+            kubernetes.config.new_client_from_config(
+                config_file=os.path.expandvars(os.path.expanduser(kubeconfig)),
+                context=kubecontext,
+            )
+            if kubeconfig
+            else None
+        )
 
         meta = TestMeta(
             node_id=node_id,
             name=test_name,
             namespace_create=namespace_create,
             namespace_name=namespace_name,
-            api_client=api_client
+            api_client=api_client,
         )
 
         self.nodes[node_id] = meta
