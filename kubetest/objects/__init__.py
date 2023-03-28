@@ -7,6 +7,7 @@ from .clusterrole import ClusterRole
 from .clusterrolebinding import ClusterRoleBinding
 from .configmap import ConfigMap
 from .container import Container
+from .csidriver import CSIDriver
 from .custom_objects import CustomObject
 from .customresourcedefinition import CustomResourceDefinition
 from .daemonset import DaemonSet

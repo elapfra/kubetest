@@ -1278,6 +1278,38 @@ class TestClient:
 
         return persistentvolumes
 
+    def get_csidrivers(
+        self,
+        fields: Dict[str, str] = None,
+        labels: Dict[str, str] = None,
+    ) -> Dict[str, objects.CSIDriver]:
+        """Get PersistentVolumes from the cluster.
+
+        Args:
+            fields: A dictionary of fields used to restrict the returned collection
+                of PersistentVolume to only those which match these field
+                selectors. By default, no restricting is done.
+            labels: A dictionary of labels used to restrict the returned collection
+                of PersistentVolume to only those which match these label
+                selectors. By default, no restricting is done.
+        Returns:
+            A dictionary where the key is the CSIDriver name and the
+            value is the CSIDriver itself.
+        """
+        selectors = utils.selector_kwargs(fields, labels)
+
+        c = objects.CSIDriver.preferred_client(api_client=self.api_client)
+        results = c.list_csi_driver(
+            **selectors,
+        )
+
+        csidrivers = {}
+        for obj in results.items:
+            csidriver = objects.CSIDriver(obj, api_client=self.api_client)
+            csidrivers[csidriver.name] = csidriver
+
+        return csidrivers
+
     def get_persistentvolumeclaims(
         self,
         namespace: str = None,
