@@ -30,12 +30,14 @@ class DaemonSet(Workload):
         "apps/v1": client.AppsV1Api,
     }
 
-    def __init__(self, *args, add_labels=True, **kwargs) -> None:
+    def __init__(
+        self, *args, add_labels=True, create_klabel_if_missing=True, **kwargs
+    ) -> None:
         super(DaemonSet, self).__init__(*args, **kwargs)
         if add_labels:
-            self._add_kubetest_labels()
+            self._add_kubetest_labels(create_klabel_if_missing)
 
-    def _add_kubetest_labels(self) -> None:
+    def _add_kubetest_labels(self, create_klabel_if_missing) -> None:
         """Add a kubetest label to the DaemonSet object.
 
         This allows kubetest to more easily and reliably search for and aggregate
@@ -50,7 +52,11 @@ class DaemonSet(Workload):
         else:
             self.klabel_uid = None
         if not self.klabel_uid:
-            self.klabel_uid = str(uuid.uuid4())
+            if create_klabel_if_missing:
+                self.klabel_uid = str(uuid.uuid4())
+            else:
+                self.klabel_key = None
+                return
 
         # fixme: it would be nice to clean up this label setting logic a bit
         #   and possibly abstract it out to something more generalized, but
