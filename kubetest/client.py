@@ -834,7 +834,10 @@ class TestClient:
         daemonsets = {}
         for obj in results.items:
             daemonset = objects.DaemonSet(
-                obj, api_client=self.api_client, add_labels=add_labels
+                obj,
+                api_client=self.api_client,
+                add_labels=add_labels,
+                create_klabel_if_missing=False,
             )
             daemonsets[
                 (daemonset.name, daemonset.namespace)
@@ -890,7 +893,10 @@ class TestClient:
         deployments = {}
         for obj in results.items:
             deployment = objects.Deployment(
-                obj, api_client=self.api_client, add_labels=add_labels
+                obj,
+                api_client=self.api_client,
+                add_labels=add_labels,
+                create_klabel_if_missing=False,
             )
             deployments[
                 (deployment.name, deployment.namespace)
@@ -1032,7 +1038,9 @@ class TestClient:
 
         jobs = {}
         for obj in results.items:
-            job = objects.Job(obj, api_client=self.api_client)
+            job = objects.Job(
+                obj, api_client=self.api_client, create_klabel_if_missing=False
+            )
             jobs[(job.name, job.namespace) if all_namespaces else job.name] = job
 
         return jobs
@@ -1455,7 +1463,9 @@ class TestClient:
 
         replicasets = {}
         for obj in results.items:
-            rs = objects.ReplicaSet(obj, api_client=self.api_client)
+            rs = objects.ReplicaSet(
+                obj, api_client=self.api_client, create_klabel_if_missing=False
+            )
             replicasets[(rs.name, rs.namespace) if all_namespaces else rs.name] = rs
 
         return replicasets
@@ -1506,7 +1516,10 @@ class TestClient:
         statefulsets = {}
         for obj in results.items:
             sset = objects.StatefulSet(
-                obj, api_client=self.api_client, add_labels=add_labels
+                obj,
+                api_client=self.api_client,
+                add_labels=add_labels,
+                create_klabel_if_missing=False,
             )
             statefulsets[
                 (sset.name, sset.namespace) if all_namespaces else sset.name
