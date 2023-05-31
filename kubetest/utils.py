@@ -53,7 +53,7 @@ def selector_string(selectors: Mapping[str, str]) -> str:
     Returns:
         The selector string for the given dictionary.
     """
-    return ",".join([f"{k}={v}" for k, v in selectors.items()])
+    return ",".join([f"{k}={v}" if v else f"{k}" for k, v in selectors.items()])
 
 
 def selector_kwargs(
