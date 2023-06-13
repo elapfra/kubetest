@@ -1193,7 +1193,7 @@ class TestClient:
             if namespace is None:
                 namespace = self.namespace
             results = preferred_client.list_namespaced_secret(
-                namespace=namespace, *selectors
+                namespace=namespace, **selectors
             )
 
         secrets = {}
