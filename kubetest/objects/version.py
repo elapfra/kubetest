@@ -43,8 +43,21 @@ class Version(ApiObject):
     def git_version(self):
         return self.obj.git_version
 
-    def major_minor_version(self):
-        return self.obj.major, self.obj.minor
+    def major_minor_version(self, digit_only=False):
+        """
+        :param digit_only:  To parse minor version such as 28+, we keep only the leading part
+        :return: major, minor tuple
+        """
+        minor = ""
+        if digit_only:
+            for char in self.obj.minor:
+                if char.isdigit():
+                    minor += char
+                else:
+                    break  # Stop when a non-digit character is encountered
+        else:
+            minor = self.obj.minor
+        return self.obj.major, minor
 
     def get_version_code(self):
         return Version.preferred_client().get_code()
