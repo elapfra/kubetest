@@ -50,7 +50,7 @@ class TestCastValue:
         """Test casting values to the specified type successfully."""
 
         actual = manifest.cast_value(value, t)
-        assert type(actual) == type(expected)
+        assert type(actual) is type(expected)
         assert actual == expected
 
     @pytest.mark.parametrize(

@@ -29,12 +29,12 @@ setup(
     author_email=pkg["__author_email__"],
     license=pkg["__license__"],
     packages=find_packages(),
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     package_data={
         "": ["LICENSE"],
     },
     install_requires=[
-        "kubernetes>=26, <27",
+        "kubernetes>=27, <28",
         "pyyaml>=5.4",
         "pytest",
     ],
@@ -46,7 +46,6 @@ setup(
         "Natural Language :: English",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
