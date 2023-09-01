@@ -28,7 +28,6 @@ class StorageClass(ApiObject):
     api_clients = {
         "preferred": client.StorageV1Api,
         "v1": client.StorageV1Api,
-        "storage.k8s.io/v1beta1": client.StorageV1beta1Api,
     }
 
     def refresh(self) -> None:
