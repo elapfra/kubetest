@@ -59,5 +59,6 @@ class Version(ApiObject):
             minor = self.obj.minor
         return self.obj.major, minor
 
-    def get_version_code(self):
-        return self.api_client.get_code()
+    @staticmethod
+    def get_version_code():
+        return Version.preferred_client().get_code()
