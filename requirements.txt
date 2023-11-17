@@ -22,7 +22,7 @@ idna==3.4
     # via requests
 iniconfig==2.0.0
     # via pytest
-kubernetes==27.2.0
+kubernetes==28.1.0
     # via kubetest (setup.py)
 oauthlib==3.2.2
     # via
