@@ -49,6 +49,7 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
     ],
     # this make a plugin available to pytest
     # https://docs.pytest.org/en/latest/writing_plugins.html#making-your-plugin-installable-by-others

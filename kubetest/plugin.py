@@ -294,8 +294,8 @@ def pytest_runtest_teardown(item):
     # override, there will be more than one fixture associated with the 'kubeconfig'
     # name. In such case, we should assume that a fixture was used to load the config
     # and allow test cleanup to proceed.
-    _, _, fixtures = item.session._fixturemanager.getfixtureclosure(
-        ["kubeconfig"], item
+    _, fixtures = item.session._fixturemanager.getfixtureclosure(
+        item, ["kubeconfig"], ()
     )
 
     if (
