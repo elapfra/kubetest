@@ -2,6 +2,7 @@
 
 import logging
 import time
+import uuid
 from typing import Dict, Mapping, Union
 
 from kubernetes.client.rest import ApiException
@@ -28,20 +29,26 @@ def new_namespace(test_name: str) -> str:
     """
     prefix = "kubetest"
     timestamp = str(int(time.time()))
+    test_uuid = str(uuid.uuid4())[:8]
     test_name = test_name.replace("_", "-").lower()
     test_name = test_name.replace("[", "-")
     test_name = test_name.replace("]", "-")
 
     # The length of a resource name in Kubernetes may not exceed 63
-    # characters. Check the length of all components (+2 for the dashes
+    # characters. Check the length of all components (+3 for the dashes
     # joining the components). If the total length exceeds 63, truncate
     # the test name.
-    name_len = len(prefix) + len(timestamp) + len(test_name) + 2
+    name_len = len(prefix) + len(test_uuid) + len(timestamp) + len(test_name) + 3
 
     if name_len > 63:
         test_name = test_name[: -(name_len - 63)]
 
-    return "-".join((prefix, test_name, timestamp))
+    composed_name = "-".join((prefix, test_uuid, timestamp, test_name))
+    # Make sure truncated name does not end with "-"
+    while composed_name.endswith("-"):
+        composed_name = composed_name[:-1]
+
+    return composed_name
 
 
 def selector_string(selectors: Mapping[str, str]) -> str:
@@ -53,7 +60,9 @@ def selector_string(selectors: Mapping[str, str]) -> str:
     Returns:
         The selector string for the given dictionary.
     """
-    return ",".join([f"{k}={v}" if v is not None else f"{k}" for k, v in selectors.items()])
+    return ",".join(
+        [f"{k}={v}" if v is not None else f"{k}" for k, v in selectors.items()]
+    )
 
 
 def selector_kwargs(
@@ -136,4 +145,4 @@ def wait_for_condition(
         time.sleep(interval)
 
     end = time.time()
-    log.info(f"wait completed (total={end-start}s) {condition}")
+    log.info(f"wait completed (total={end - start}s) {condition}")

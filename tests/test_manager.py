@@ -14,7 +14,7 @@ def test_manager_new_test():
 
     c = m.new_test("node-id", "test-name", True, None)
     assert isinstance(c, manager.TestMeta)
-    assert "kubetest-test-name-" in c.ns
+    assert "kubetest-" in c.ns and "test-name" in c.ns
 
     assert len(m.nodes) == 1
     assert "node-id" in m.nodes
@@ -81,7 +81,7 @@ def test_manager_setup(cluster_dir, kubernetes_requests_mock, expected_request_k
         "POST", "https://127.0.0.1/api/v1/namespaces", **kwargs
     )
 
-    assert "kubetest-test-name-" in c.ns
+    assert "kubetest-" in c.ns and "test-name" in c.ns
 
     assert len(m1.nodes) == 1
     assert "node-id" in m1.nodes
@@ -124,8 +124,8 @@ def test_multiple_manager_setup(
         "POST", "https://::1/api/v1/namespaces", **kwargs_c2
     )
 
-    assert "kubetest-test-name-" in c1.ns
-    assert "kubetest-test-name-" in c2.ns
+    assert "kubetest-" in c1.ns and "test-name" in c1.ns
+    assert "kubetest-" in c2.ns and "test-name" in c2.ns
 
     assert c1.ns != c2.ns
 
