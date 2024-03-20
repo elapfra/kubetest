@@ -20,7 +20,7 @@ class Deployment(Workload):
     API Object and provides some state management for the `Deployment`_.
 
     .. _Deployment:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#deployment-v1-apps
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#deployment-v1-apps
     """
 
     obj_type = client.V1Deployment

@@ -23,7 +23,7 @@ class Container:
     easier.
 
     .. _Container:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#container-v1-core
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#container-v1-core
     """
 
     def __init__(self, api_object, pod) -> None:
@@ -60,11 +60,13 @@ class Container:
         Returns:
             The Container logs.
         """
-        return client.CoreV1Api(api_client=self.pod.raw_api_client).read_namespaced_pod_log(
+        return client.CoreV1Api(
+            api_client=self.pod.raw_api_client
+        ).read_namespaced_pod_log(
             name=self.pod.name,
             namespace=self.pod.namespace,
             container=self.obj.name,
-            ** kwargs
+            **kwargs,
         )
 
     def search_logs(self, *keyword: str) -> bool:

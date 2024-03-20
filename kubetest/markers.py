@@ -324,7 +324,7 @@ def clusterrolebindings_from_marker(
 
 def get_custom_rbac_subject(
     namespace: str, kind: str, name: str
-) -> List[client.V1Subject]:
+) -> List[client.RbacV1Subject]:
     """Create a custom RBAC subject for the given namespace.
 
     Both `kind` and `name` must be specified. If one is set and
@@ -352,7 +352,7 @@ def get_custom_rbac_subject(
     # otherwise, if a custom subject is specified, create it
     if name is not None and kind is not None:
         return [
-            client.V1Subject(
+            client.RbacV1Subject(
                 api_group="rbac.authorization.k8s.io",
                 namespace=namespace,
                 kind=kind,
@@ -363,7 +363,7 @@ def get_custom_rbac_subject(
         return []
 
 
-def get_default_rbac_subjects(namespace: str) -> List[client.V1Subject]:
+def get_default_rbac_subjects(namespace: str) -> List[client.RbacV1Subject]:
     """Get the default RBAC Subjects.
 
     The default subjects will allow:
@@ -379,21 +379,21 @@ def get_default_rbac_subjects(namespace: str) -> List[client.V1Subject]:
     """
     return [
         # all authenticated users
-        client.V1Subject(
+        client.RbacV1Subject(
             api_group="rbac.authorization.k8s.io",
             namespace=namespace,
             name="system:authenticated",
             kind="Group",
         ),
         # all unauthenticated users
-        client.V1Subject(
+        client.RbacV1Subject(
             api_group="rbac.authorization.k8s.io",
             namespace=namespace,
             name="system:unauthenticated",
             kind="Group",
         ),
         # all service accounts
-        client.V1Subject(
+        client.RbacV1Subject(
             api_group="rbac.authorization.k8s.io",
             namespace=namespace,
             name="system:serviceaccounts",

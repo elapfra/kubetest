@@ -19,7 +19,7 @@ class ClusterRole(ApiObject):
     API Object and provides some state management for the `ClusterRole_.
 
     .. _ClusterRole:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#clusterrole-v1-rbac-authorization-k8s-io
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#clusterrole-v1-rbac-authorization-k8s-io
     """
 
     obj_type = client.V1ClusterRole
