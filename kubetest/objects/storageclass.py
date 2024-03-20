@@ -20,7 +20,7 @@ class StorageClass(ApiObject):
     API Object and provides some state management for the `V1StorageClass`_.
 
     .. _StorageClass:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#storageclass-v1-storage-k8s-io
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#storageclass-v1-storage-k8s-io
     """
 
     obj_type = client.V1StorageClass
