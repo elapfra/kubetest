@@ -8,13 +8,13 @@ from kubetest import utils
 @pytest.mark.parametrize(
     "name,expected",
     [
-        ("", "kubetest-a80ebe94-1536849367-"),
+        ("", "kubetest-a80ebe94-1536849367"),
         ("TestName", "kubetest-a80ebe94-1536849367-testname"),
         ("TESTNAME", "kubetest-a80ebe94-1536849367-testname"),
         ("Test-Name", "kubetest-a80ebe94-1536849367-test-name"),
         ("Test1_FOO-BAR_2", "kubetest-a80ebe94-1536849367-test1-foo-bar-2"),
         ("123456", "kubetest-a80ebe94-1536849367-123456"),
-        ("___", "kubetest-a80ebe94-1536849367----"),
+        ("___", "kubetest-a80ebe94-1536849367"),
         (
             "test-" * 14,
             "kubetest-a80ebe94-1536849367-test-test-test-test-test-test-test",

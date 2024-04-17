@@ -43,7 +43,12 @@ def new_namespace(test_name: str) -> str:
     if name_len > 63:
         test_name = test_name[: -(name_len - 63)]
 
-    return "-".join((prefix, test_uuid, timestamp, test_name))
+    composed_name = "-".join((prefix, test_uuid, timestamp, test_name))
+    # Make sure truncated name does not end with "-"
+    while composed_name.endswith("-"):
+        composed_name = composed_name[:-1]
+
+    return composed_name
 
 
 def selector_string(selectors: Mapping[str, str]) -> str:
