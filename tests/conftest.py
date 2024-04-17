@@ -119,7 +119,7 @@ def simple_persistentvolumeclaim():
         metadata=client.V1ObjectMeta(name="my-pvc"),
         spec=client.V1PersistentVolumeClaimSpec(
             access_modes=["ReadWriteMany"],
-            resources=client.V1ResourceRequirements(requests={"storage": "16Mi"}),
+            resources=client.V1VolumeResourceRequirements(requests={"storage": "16Mi"}),
         ),
     )
 
