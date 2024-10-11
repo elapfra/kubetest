@@ -42,7 +42,7 @@ class Workload(ApiObject):
         Returns:
             A list of pods that belong to the workload.
         """
-        log.info(f'getting pods for {self.__class__.name} "{self.name}"')
+        log.info(f'getting pods for {self.__class__.__name__} "{self.name}"')
         selector = None
         if self.klabel_key and self.klabel_uid:
             selector = selector_string({self.klabel_key: self.klabel_uid})
