@@ -8,6 +8,7 @@ the state of the cluster.
 import logging
 import os
 import warnings
+from pathlib import Path
 from typing import Optional
 
 import kubernetes
@@ -432,9 +433,17 @@ def clusterinfo(kubeconfig) -> ClusterInfo:
 
 @pytest.fixture
 def kubeconfig(request) -> Optional[str]:
-    """Return the name of the configured kube config file loaded for the tests."""
+    """Return the kubeconfig file path, prioritizing pytest options, then default location if file exists."""
 
+    # Check if provided via pytest option
     config_file = request.session.config.getoption("kube_config")
+
+    # Default to ~/.kube/config if nothing else is set
+    if not config_file:
+        default_path = Path.home() / ".kube" / "config"
+        if default_path.exists():
+            config_file = str(default_path)
+
     return config_file
 
 
