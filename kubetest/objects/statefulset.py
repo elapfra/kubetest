@@ -20,7 +20,7 @@ class StatefulSet(Workload):
     API Object and provides some state management for the `StatefulSet`_.
 
     .. StatefulSet:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#statefulset-v1-apps
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#statefulset-v1-apps
     """
 
     obj_type = client.V1StatefulSet

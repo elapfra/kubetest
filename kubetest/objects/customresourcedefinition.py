@@ -15,7 +15,7 @@ class CustomResourceDefinition(ApiObject):
     This wrapper provides some convenient functionality around the
     API Object and provides some state management for the `V1beta1CustomResourceDefinition`_.
     .. V1beta1CustomResourceDefinition:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#customresourcedefinition-v1-apiextensions-k8s-io
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#customresourcedefinition-v1-apiextensions-k8s-io
     """
 
     obj_type = client.V1CustomResourceDefinitionList

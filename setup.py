@@ -34,7 +34,7 @@ setup(
         "": ["LICENSE"],
     },
     install_requires=[
-        "kubernetes>=30, <31",
+        "kubernetes>=31, <32",
         "pyyaml>=5.4",
         "pytest",
     ],
@@ -50,6 +50,7 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
     ],
     # this make a plugin available to pytest
     # https://docs.pytest.org/en/latest/writing_plugins.html#making-your-plugin-installable-by-others
