@@ -433,7 +433,8 @@ def clusterinfo(kubeconfig) -> ClusterInfo:
 
 @pytest.fixture
 def kubeconfig(request) -> Optional[str]:
-    """Return the kubeconfig file path, prioritizing pytest options, then default location if file exists."""
+    """Return the kubeconfig file path, prioritizing pytest options, then default location if file
+    exists."""
 
     # Check if provided via pytest option
     config_file = request.session.config.getoption("kube_config")
