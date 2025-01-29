@@ -21,7 +21,7 @@ class CSIDriver(ApiObject):
     API Object and provides some state management for the `V1CSIDriver`_.
 
     .. _CSIDriver:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#csidriver-v1-storage-k8s-io
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#csidriver-v1-storage-k8s-io
     """
 
     obj_type = client.V1CSIDriver
