@@ -20,7 +20,7 @@ class Namespace(ApiObject):
     API Object and provides some state management for the `Namespace`_.
 
     .. _Namespace:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#namespace-v1-core
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#namespace-v1-core
     """
 
     obj_type = client.V1Namespace

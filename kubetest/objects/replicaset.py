@@ -20,7 +20,7 @@ class ReplicaSet(Workload):
     API Object and provides some state management for the `ReplicaSet`_.
 
     .. ReplicaSet:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#replicaset-v1-apps
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#replicaset-v1-apps
     """
 
     obj_type = client.V1ReplicaSet
