@@ -261,11 +261,6 @@ def pytest_runtest_setup(item):
         test_case.register_clusterrolebindings(
             *markers.clusterrolebindings_from_marker(item, test_case.ns)
         )
-
-        # Apply manifests for the test case, if any are specified.
-        markers.apply_manifests_from_marker(item, test_case)
-        markers.apply_manifest_from_marker(item, test_case)
-
     except Exception as e:
         test_case._pt_setup_failed = True
         raise e
@@ -485,6 +480,10 @@ def kube(kubeconfig, kubecontext, request) -> TestClient:
             f'No kubetest client found for test using the "kube" fixture. ({request.node.nodeid})',  # noqa
         )
         raise errors.SetupError("error generating test client")
+
+    # Apply manifests for the test case if any markers are present.
+    markers.apply_manifests_from_marker(request.node, test_case)
+    markers.apply_manifest_from_marker(request.node, test_case)
 
     # Setup the test case. This will create the namespace and any other
     # objects (e.g. role bindings) that the test case will need.

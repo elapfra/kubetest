@@ -1,4 +1,4 @@
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: test-deployment
@@ -20,9 +20,9 @@ spec:
         image: mendhak/http-https-echo
         ports:
         - name: http
-          containerPort: 80
+          containerPort: 8080
         - name: https
-          containerPort: 443
+          containerPort: 8443
         resources:
           requests:
             cpu: 25m
