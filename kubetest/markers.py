@@ -147,19 +147,24 @@ def apply_manifest_from_marker(item: pytest.Item, meta: manager.TestMeta) -> Non
         context_renderer = ContextRenderer(renderer, context)
         objs = load_file(path, renderer=context_renderer)
 
+        kind_to_class = {}
+        # Map all direct subclasses of ApiObject
+        for cls in ApiObject.__subclasses__():
+            kind_to_class[cls.__name__] = cls
+            # Include all subclasses of those subclasses (e.g., Workload -> Deployment, StatefulSet)
+            for sub_cls in cls.__subclasses__():
+                kind_to_class[sub_cls.__name__] = sub_cls
+
         # For each of the loaded Kubernetes resources, wrap it in the
         # equivalent kubetest wrapper. If the object does not yet have a
         # wrapper, error out. We cannot reliably create the resource
         # without our ApiObject wrapper semantics.
         wrapped = []
-        found = False
         for obj in objs:
-            for klass in ApiObject.__subclasses__():
-                if obj.kind == klass.__name__:
-                    wrapped.append(klass(obj))
-                    found = True
-                    break
-            if not found:
+            klass = kind_to_class.get(obj.kind)
+            if klass:
+                wrapped.append(klass(obj))
+            else:
                 raise ValueError(
                     f"Unable to match loaded object to an internal wrapper class: {obj}",
                 )
@@ -218,19 +223,24 @@ def apply_manifests_from_marker(item: pytest.Item, meta: manager.TestMeta) -> No
                     load_file(os.path.join(dir_path, f), renderer=context_renderer)
                 )
 
+        kind_to_class = {}
+        # Map all direct subclasses of ApiObject
+        for cls in ApiObject.__subclasses__():
+            kind_to_class[cls.__name__] = cls
+            # Include all subclasses of those subclasses (e.g., Workload -> Deployment, StatefulSet)
+            for sub_cls in cls.__subclasses__():
+                kind_to_class[sub_cls.__name__] = sub_cls
+
         # For each of the loaded Kubernetes resources, we'll want to wrap it
         # in the equivalent kubetest wrapper. If the resource does not have
         # an equivalent kubetest wrapper, error out. We cannot reliably create
         # the resource without our ApiObject wrapper semantics.
         wrapped = []
         for obj in objs:
-            found = False
-            for klass in ApiObject.__subclasses__():
-                if obj.kind == klass.__name__:
-                    wrapped.append(klass(obj))
-                    found = True
-                    break
-            if not found:
+            klass = kind_to_class.get(obj.kind)
+            if klass:
+                wrapped.append(klass(obj))
+            else:
                 raise ValueError(
                     f"Unable to match loaded object to an internal wrapper class: {obj}",
                 )

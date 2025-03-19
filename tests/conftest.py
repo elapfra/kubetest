@@ -6,7 +6,7 @@ from typing import Any, Dict
 from unittest.mock import ANY, Mock
 
 import pytest
-import urllib3.request
+import urllib3
 from kubernetes import client
 
 
@@ -257,52 +257,50 @@ def kubernetes_requests_mock(monkeypatch):
         body = urlopen_kw.get("body")
         data = json.loads(body) if body else {}
         metadata = data.get("metadata", {})
-        if method == "POST":
-            if "/api/v1/namespaces" in url:
-                # create namespace
-                name = metadata["name"]
-                if url.startswith("https://127.0.0.1"):
-                    uid = "00000000-0000-0000-0000-000000000000"
-                elif url.startswith("https://::1"):
-                    uid = "00000000-0000-0000-0000-000000000001"
-                else:
-                    raise UnavailableHostException
-                data = {
-                    "kind": "Namespace",
-                    "apiVersion": "v1",
-                    "metadata": {
-                        "name": name,
-                        "uid": uid,
-                        "resourceVersion": "121606904",
-                        "creationTimestamp": utc_time,
-                        "labels": {"kubernetes.io/metadata.name": name},
-                        "managedFields": [
-                            {
-                                "manager": "OpenAPI-Generator",
-                                "operation": "Update",
-                                "apiVersion": "v1",
-                                "time": utc_time,
-                                "fieldsType": "FieldsV1",
-                                "fieldsV1": {
-                                    "f:metadata": {
-                                        "f:labels": {
-                                            ".": {},
-                                            "f:kubernetes.io/metadata.name": {},
-                                        }
+
+        if method == "POST" and "/api/v1/namespaces" in url:
+            name = metadata["name"]
+            uid = (
+                "00000000-0000-0000-0000-000000000000"
+                if "127.0.0.1" in url
+                else "00000000-0000-0000-0000-000000000001"
+            )
+            data = {
+                "kind": "Namespace",
+                "apiVersion": "v1",
+                "metadata": {
+                    "name": name,
+                    "uid": uid,
+                    "resourceVersion": "121606904",
+                    "creationTimestamp": utc_time,
+                    "labels": {"kubernetes.io/metadata.name": name},
+                    "managedFields": [
+                        {
+                            "manager": "OpenAPI-Generator",
+                            "operation": "Update",
+                            "apiVersion": "v1",
+                            "time": utc_time,
+                            "fieldsType": "FieldsV1",
+                            "fieldsV1": {
+                                "f:metadata": {
+                                    "f:labels": {
+                                        ".": {},
+                                        "f:kubernetes.io/metadata.name": {},
                                     }
-                                },
-                            }
-                        ],
-                    },
-                    "spec": {"finalizers": ["kubernetes"]},
-                    "status": {"phase": "Active"},
-                }
-                return MockResponse(status=201, reason="created", data=data)
+                                }
+                            },
+                        }
+                    ],
+                },
+                "spec": {"finalizers": ["kubernetes"]},
+                "status": {"phase": "Active"},
+            }
+            return MockResponse(status=201, reason="created", data=data)
+
         raise URLOrMethodNotRecognised
 
-    # apply the monkeypatch for requests.get to mock_get
     mock = Mock(side_effect=mock_urllib_request)
-    monkeypatch.setattr(urllib3.request.RequestMethods, "request", mock)
+    monkeypatch.setattr(urllib3.PoolManager, "request", mock)
     yield mock
 
 
