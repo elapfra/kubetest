@@ -44,24 +44,65 @@ class Workload(ApiObject):
         """
         log.info(f'getting pods for {self.__class__.__name__} "{self.name}"')
         selector = None
+
         if self.klabel_key and self.klabel_uid:
             selector = selector_string({self.klabel_key: self.klabel_uid})
         elif self.obj.spec.selector:
+            selector_parts = []
+
+            # Handle matchLabels
             if self.obj.spec.selector.match_labels:
-                selector = selector_string(self.obj.spec.selector.match_labels)
-            elif self.obj.spec.selector.match_expressions:
-                # TODO
-                pass
+                match_labels = self.obj.spec.selector.match_labels
+                selector_parts.append(selector_string(match_labels))
+
+            # Handle matchExpressions
+            match_expressions = getattr(
+                self.obj.spec.selector, "match_expressions", None
+            )
+            if match_expressions:
+                for expr in match_expressions:
+                    key = expr.key
+                    operator = expr.operator
+                    values = expr.values or []
+
+                    if operator == "In":
+                        selector_parts.append(f"{key} in ({','.join(values)})")
+                    elif operator == "NotIn":
+                        selector_parts.append(f"{key} notin ({','.join(values)})")
+                    elif operator == "Exists":
+                        selector_parts.append(key)
+                    elif operator == "DoesNotExist":
+                        selector_parts.append(f"!{key}")
+                    else:
+                        log.warning(
+                            f"Unsupported match expression operator: {operator}"
+                        )
+
+            if selector_parts:
+                selector = ",".join(selector_parts)
             else:
-                # TODO
-                pass
-        pods = client.CoreV1Api(api_client=self.raw_api_client).list_namespaced_pod(
+                log.debug(f"No valid label selectors found for {self.name}")
+        else:
+            log.debug(f"No selector found for {self.name}")
+
+        # Fetch all pods matching the label selector
+        pod_list = client.CoreV1Api(api_client=self.raw_api_client).list_namespaced_pod(
             namespace=self.namespace, label_selector=selector
         )
 
-        pods = [Pod(p) for p in pods.items]
-        log.debug(f"pods: {[p.name for p in pods]}")
-        return pods
+        # Filter only pods owned by this Workload Kind. e.g. StatefulSet
+        workload_uid = self.obj.metadata.uid
+        owned_pods = [
+            Pod(pod)
+            for pod in pod_list.items
+            if any(
+                owner.kind == self.__class__.__name__ and owner.uid == workload_uid
+                for owner in pod.metadata.owner_references or []
+            )
+        ]
+
+        log.debug(f"Owned pods: {[p.name for p in owned_pods]}")
+        return owned_pods
 
     def num_replicas(self):
         self.refresh()
