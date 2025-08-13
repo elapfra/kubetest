@@ -670,6 +670,60 @@ class TestClient:
 
         return configmaps
 
+    def get_configmap(
+        self,
+        name: str,
+        namespace: str = None,
+        all_namespaces: bool = False,
+        fields: Dict[str, str] = None,
+        labels: Dict[str, str] = None,
+    ) -> Dict[str, objects.ConfigMap]:
+        """Get a single ConfigMap from the cluster.
+
+        Args:
+            all_namespaces: If True, search across all namespaces for the ConfigMap.
+            name: The name of the ConfigMap to retrieve.
+            namespace: The namespace to get the ConfigMaps from. If not specified,
+                it will use the auto-generated test case namespace by default.
+            fields: A dictionary of fields used to restrict the returned collection
+                of ConfigMaps to only those which match these field selectors. By
+                default, no restricting is done.
+            labels: A dictionary of labels used to restrict the returned collection
+                of ConfigMaps to only those which match these label selectors. By
+                default, no restricting is done.
+
+        Returns:
+            A dictionary where the key is the ConfigMap name or tuple of name & namespace if
+            all_namespaces=True and the value is the ConfigMap itself.
+        """
+        if namespace and len(namespace) > 0 and all_namespaces:
+            raise AttributeError("Can not set namespace when all_namespaces=True")
+
+        selectors = utils.selector_kwargs(fields, labels)
+        preferred_client = objects.ConfigMap.preferred_client(
+            api_client=self.api_client
+        )
+
+        configmaps = {}
+
+        if all_namespaces:
+            results = preferred_client.list_config_map_for_all_namespaces(**selectors)
+            for obj in results.items:
+                if obj.metadata.name == name:
+                    cm = objects.ConfigMap(obj, api_client=self.api_client)
+                    configmaps[(cm.name, cm.namespace)] = cm
+        else:
+            if namespace is None:
+                namespace = self.namespace
+
+            obj = preferred_client.read_namespaced_config_map(
+                name=name, namespace=namespace, **selectors
+            )
+            cm = objects.ConfigMap(obj, api_client=self.api_client)
+            configmaps[cm.name] = cm
+
+        return configmaps
+
     def get_custom_objects(
         self,
         crd: CustomResourceDefinition = None,
