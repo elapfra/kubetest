@@ -2,6 +2,7 @@
 daemonset, deployment, job, replicaset, statefulset
 """
 import abc
+import json
 import logging
 from typing import List
 
@@ -90,13 +91,59 @@ class Workload(ApiObject):
             namespace=self.namespace, label_selector=selector
         )
 
-        # Filter only pods owned by this Workload Kind. e.g. StatefulSet
+        # Build minimal owner map (UID -> ownerReferences) for intermediate controllers
+        def fetch_owner_map(api_client, namespace, plural, group, version):
+            path = f"/apis/{group}/{version}/namespaces/{namespace}/{plural}"
+            resp, _, _ = api_client.call_api(
+                path,
+                "GET",
+                response_type="json",
+                _preload_content=False,
+                header_params={
+                    "Accept": "application/json;as=PartialObjectMetadataList;g=meta.k8s.io;v=v1"
+                },
+            )
+            data = json.loads(resp.data.decode("utf-8"))
+            items = data.get("items") or []  # ensure empty list instead of None
+            return {
+                item["metadata"]["uid"]: item["metadata"].get("ownerReferences", [])
+                for item in items
+            }
+
+        owner_map: dict[str, list] = {}
+        owner_map.update(
+            fetch_owner_map(
+                self.raw_api_client, self.namespace, "replicasets", "apps", "v1"
+            )
+        )
+        owner_map.update(
+            fetch_owner_map(self.raw_api_client, self.namespace, "jobs", "batch", "v1")
+        )
+        # Add other types if needed in future
+
         workload_uid = self.obj.metadata.uid
+
+        # Recursively walk the ownership chain in-memory
+        def is_owned_by_workload(obj_uid: str, visited: set[str]) -> bool:
+            if obj_uid in visited:
+                return False
+            visited.add(obj_uid)
+
+            if obj_uid == workload_uid:
+                return True
+
+            for owner_ref in owner_map.get(obj_uid, []):
+                if is_owned_by_workload(owner_ref["uid"], visited):
+                    return True
+
+            return False
+
+        # Filter pods by ownership chain
         owned_pods = [
             Pod(pod)
             for pod in pod_list.items
             if any(
-                owner.kind == self.__class__.__name__ and owner.uid == workload_uid
+                is_owned_by_workload(owner.uid, set())
                 for owner in pod.metadata.owner_references or []
             )
         ]
