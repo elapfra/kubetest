@@ -195,7 +195,7 @@ By default, ``kubetest`` will automatically generate a new Namespace for each te
 using the test name and a timestamp for the namespace name to ensure uniqueness. This behavior
 may not be desired in all cases, such as when users may not have permissions to create a new
 namespace on the cluster, or the tests are written against an already-running deployment in
-an existing namespace. In such cases, the :ref:`_namespace_marker` may be used.
+an existing namespace. In such cases, the :ref:`namespace_marker` may be used.
 
 Waiting
 -------
