@@ -1,7 +1,6 @@
 """Kubetest wrapper for the Kubernetes ``storageClass`` API Object."""
 
 import logging
-from distutils.util import strtobool
 
 from kubernetes import client
 
@@ -57,4 +56,4 @@ class StorageClass(ApiObject):
         flag = self.obj.metadata.annotations.get(
             "storageclass.kubernetes.io/is-default-class", "0"
         )
-        return bool(strtobool(flag.lower()))
+        return flag.lower() in ("y", "yes", "t", "true", "on", "1")
