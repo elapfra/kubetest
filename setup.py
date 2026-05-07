@@ -29,14 +29,14 @@ setup(
     author_email=pkg["__author_email__"],
     license=pkg["__license__"],
     packages=find_packages(),
-    python_requires=">=3.8",
+    python_requires=">=3.10",
     package_data={
         "": ["LICENSE"],
     },
     install_requires=[
-        "kubernetes>=33, <34",
+        "kubernetes>=35, <36",
         "pyyaml>=5.4",
-        "pytest",
+        "pytest<9",
     ],
     zip_safe=False,
     classifiers=[
@@ -46,11 +46,10 @@ setup(
         "Natural Language :: English",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
     ],
     # this make a plugin available to pytest
     # https://docs.pytest.org/en/latest/writing_plugins.html#making-your-plugin-installable-by-others
