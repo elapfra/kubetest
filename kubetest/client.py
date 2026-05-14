@@ -1474,6 +1474,59 @@ class TestClient:
 
         return ingresses
 
+    def get_httproutes(
+        self,
+        namespace: str = None,
+        all_namespaces: bool = False,
+        fields: Dict[str, str] = None,
+        labels: Dict[str, str] = None,
+    ) -> Dict[str, objects.HTTPRoute]:
+        """Get HTTPRoute resources from the cluster (Kubernetes Gateway API).
+
+        Args:
+            namespace: The namespace to get HTTPRoutes from. If not specified,
+                uses the auto-generated test case namespace by default.
+            all_namespaces: If True, list HTTPRoutes from all namespaces.
+            fields: A dictionary of fields used to restrict the returned collection.
+            labels: A dictionary of labels used to restrict the returned collection.
+
+        Returns:
+            A dictionary where the key is the HTTPRoute name (or a (name, namespace)
+            tuple if all_namespaces=True) and the value is the HTTPRoute object.
+        """
+        if namespace and len(namespace) > 0 and all_namespaces:
+            raise AttributeError("Can not set namespace when all_namespaces=True")
+
+        selectors = utils.selector_kwargs(fields, labels)
+        preferred_client = objects.HTTPRoute.preferred_client(
+            api_client=self.api_client
+        )
+
+        group = objects.HTTPRoute.GATEWAY_API_GROUP
+        version = objects.HTTPRoute.GATEWAY_API_VERSION
+        plural = objects.HTTPRoute.GATEWAY_API_PLURAL
+
+        if all_namespaces:
+            results = preferred_client.list_cluster_custom_object(
+                group, version, plural, **selectors
+            )
+        else:
+            if namespace is None:
+                namespace = self.namespace
+            results = preferred_client.list_namespaced_custom_object(
+                group, version, namespace, plural, **selectors
+            )
+
+        httproutes = {}
+        for obj in results["items"]:
+            httproute = objects.HTTPRoute(obj, api_client=self.api_client)
+            httproutes[
+                (httproute.name, httproute.namespace)
+                if all_namespaces
+                else httproute.name
+            ] = httproute
+        return httproutes
+
     def get_replicasets(
         self,
         namespace: str = None,

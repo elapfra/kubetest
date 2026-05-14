@@ -14,6 +14,7 @@ from .daemonset import DaemonSet
 from .deployment import Deployment
 from .endpoints import Endpoints
 from .event import Event
+from .httproute import HTTPRoute
 from .ingress import Ingress
 from .job import Job
 from .namespace import Namespace
