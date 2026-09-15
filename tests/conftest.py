@@ -248,6 +248,14 @@ class MockResponse:
         self.reason = reason
         self.data = json.dumps(data).encode() + b"\n"
 
+    def getheader(self, name, default=None):
+        """Returns a given response header."""
+        return default
+
+    def getheaders(self):
+        """Returns a dictionary of the response headers."""
+        return {}
+
 
 @pytest.fixture
 def kubernetes_requests_mock(monkeypatch):
