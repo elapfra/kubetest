@@ -286,10 +286,11 @@ def new_object(root_type, config):
                 continue
 
             # Check if the type is a dict composed of other types.
-            # This should match to something lint: 'dict(str, str)', where
-            # the element types (in this case, both 'str') will be isolated
-            # as separate groups.
-            dict_match = re.match(r"^dict\((.*), (.*)\)$", t)
+            # This should match to something like: 'dict(str, str)' (legacy
+            # kubernetes client syntax) or 'dict[str, str]' (kubernetes
+            # client >=36), where the element types (in this case, both
+            # 'str') will be isolated as separate groups.
+            dict_match = re.match(r"^dict[(\[](.*), (.*)[)\]]$", t)
             if dict_match is not None:
                 key_type = dict_match.group(1)
                 val_type = dict_match.group(2)
