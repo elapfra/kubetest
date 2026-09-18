@@ -206,8 +206,8 @@ class Pod(ApiObject):
         auth_settings = ["BearerToken"]
 
         try:
-            resp = response.Response(
-                *c.api_client.call_api(
+            resp = response.Response.from_http_response(
+                c.api_client.call_api(
                     "/api/v1/namespaces/{namespace}/pods/{name}/proxy/" + path,
                     "GET",
                     path_params=path_params,
@@ -216,10 +216,8 @@ class Pod(ApiObject):
                     body=None,
                     post_params=[],
                     files={},
-                    response_type="str",
                     auth_settings=auth_settings,
-                    _return_http_data_only=False,  # we want all info, not just data
-                    _preload_content=True,
+                    _preload_content=False,
                     _request_timeout=None,
                     collection_formats={},
                 )
@@ -279,8 +277,8 @@ class Pod(ApiObject):
         auth_settings = ["BearerToken"]
 
         try:
-            resp = response.Response(
-                *c.api_client.call_api(
+            resp = response.Response.from_http_response(
+                c.api_client.call_api(
                     "/api/v1/namespaces/{namespace}/pods/{name}/proxy/" + path,
                     "POST",
                     path_params=path_params,
@@ -289,10 +287,8 @@ class Pod(ApiObject):
                     body=data,
                     post_params=[],
                     files={},
-                    response_type="str",
                     auth_settings=auth_settings,
-                    _return_http_data_only=False,  # we want all info, not just data
-                    _preload_content=True,
+                    _preload_content=False,
                     _request_timeout=None,
                     collection_formats={},
                 )

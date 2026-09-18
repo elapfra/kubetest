@@ -1,6 +1,7 @@
-""" Base class for workload type objects:
+"""Base class for workload type objects:
 daemonset, deployment, job, replicaset, statefulset
 """
+
 import abc
 import json
 import logging
@@ -94,10 +95,9 @@ class Workload(ApiObject):
         # Build minimal owner map (UID -> ownerReferences) for intermediate controllers
         def fetch_owner_map(api_client, namespace, plural, group, version):
             path = f"/apis/{group}/{version}/namespaces/{namespace}/{plural}"
-            resp, _, _ = api_client.call_api(
+            resp = api_client.call_api(
                 path,
                 "GET",
-                response_type="json",
                 _preload_content=False,
                 header_params={
                     "Accept": "application/json;as=PartialObjectMetadataList;g=meta.k8s.io;v=v1"

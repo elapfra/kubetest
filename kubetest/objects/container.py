@@ -2,7 +2,7 @@
 
 import logging
 
-from kubernetes import client
+from kubetest import utils
 
 log = logging.getLogger("kubetest")
 
@@ -60,9 +60,8 @@ class Container:
         Returns:
             The Container logs.
         """
-        return client.CoreV1Api(
-            api_client=self.pod.raw_api_client
-        ).read_namespaced_pod_log(
+        return utils.read_pod_log(
+            self.pod.raw_api_client,
             name=self.pod.name,
             namespace=self.pod.namespace,
             container=self.obj.name,
