@@ -33,6 +33,22 @@ class Response:
         self.status = status
         self.headers = headers
 
+    @classmethod
+    def from_http_response(cls, http_response: urllib3.HTTPResponse) -> "Response":
+        """Build a Response from an unread (``_preload_content=False``) response.
+
+        kubernetes>=36 does not decode ``str`` responses, so text bodies would
+        come back as the repr of the raw bytes. The body is decoded here instead.
+        JSON bodies are exposed as the string form of the parsed object, as they
+        were with earlier kubernetes clients.
+        """
+        text = http_response.data.decode("utf-8", errors="replace")
+        try:
+            data = str(json.loads(text))
+        except ValueError:
+            data = text
+        return cls(data, http_response.status, http_response.headers)
+
     def json(self) -> Dict[str, Any]:
         """Convert the response data to JSON.
 

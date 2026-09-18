@@ -292,9 +292,8 @@ class TestMeta:
                 pod_ns = pod.metadata.namespace
                 container_name = container.name
                 try:
-                    logs = kubernetes.client.CoreV1Api(
-                        api_client=self.api_client
-                    ).read_namespaced_pod_log(
+                    logs = utils.read_pod_log(
+                        self.api_client,
                         name=pod_name,
                         namespace=pod_ns,
                         container=container_name,

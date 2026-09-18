@@ -5,11 +5,35 @@ import time
 import uuid
 from typing import Dict, Mapping, Union
 
+from kubernetes import client
 from kubernetes.client.rest import ApiException
 
 from kubetest.condition import Condition
 
 log = logging.getLogger("kubetest")
+
+
+def read_pod_log(
+    api_client: client.ApiClient, name: str, namespace: str, **kwargs
+) -> str:
+    """Read the logs of a Pod's container as text.
+
+    ``read_namespaced_pod_log`` returns the repr of the raw bytes with
+    kubernetes>=36, so the unread response is fetched and decoded here.
+
+    Args:
+        api_client: The API client to issue the request with.
+        name: The name of the Pod.
+        namespace: The namespace of the Pod.
+        kwargs: Additional arguments for ``read_namespaced_pod_log``.
+
+    Returns:
+        The logs.
+    """
+    http_response = client.CoreV1Api(api_client=api_client).read_namespaced_pod_log(
+        name=name, namespace=namespace, _preload_content=False, **kwargs
+    )
+    return http_response.data.decode("utf-8", errors="replace")
 
 
 def new_namespace(test_name: str) -> str:
